@@ -37,6 +37,9 @@ type Model struct {
 	// Tab management (multi-buffer support)
 	tabs *TabManager
 
+	// Split view management
+	split *SplitManager
+
 	// Buffer holds the text content (shortcut to active tab's buffer)
 	buffer  *buffer.GapBuffer
 	history *buffer.History
@@ -110,6 +113,7 @@ func New() *Model {
 	tab := tabs.ActiveTab()
 	return &Model{
 		tabs:               tabs,
+		split:              NewSplitManager(),
 		buffer:             tab.buffer,
 		history:            tab.history,
 		filename:           tab.filename,
@@ -130,6 +134,7 @@ func NewWithContent(content string) *Model {
 	tab.buffer = buffer.NewFromString(content)
 	return &Model{
 		tabs:               tabs,
+		split:              NewSplitManager(),
 		buffer:             tab.buffer,
 		history:            tab.history,
 		filename:           tab.filename,
@@ -152,6 +157,7 @@ func NewFromFile(filepath, filename, content string) *Model {
 	tab := tabs.ActiveTab()
 	return &Model{
 		tabs:               tabs,
+		split:              NewSplitManager(),
 		buffer:             tab.buffer,
 		history:            tab.history,
 		filename:           tab.filename,
@@ -175,6 +181,7 @@ func NewFromFileWithInfo(filepath, filename, content, encoding, lineEnding strin
 	tab := tabs.ActiveTab()
 	return &Model{
 		tabs:               tabs,
+		split:              NewSplitManager(),
 		buffer:             tab.buffer,
 		history:            tab.history,
 		filename:           tab.filename,
@@ -529,4 +536,119 @@ func (m *Model) SetShowTabs(show bool) {
 // ToggleShowTabs toggles the tab bar visibility.
 func (m *Model) ToggleShowTabs() {
 	m.showTabs = !m.showTabs
+}
+
+// IsSplit returns true if the view is split.
+func (m *Model) IsSplit() bool {
+	return m.split.IsSplit()
+}
+
+// SplitHorizontal creates a horizontal split (left/right).
+func (m *Model) SplitHorizontal() {
+	if m.split.IsSplit() {
+		m.SetStatusMessage("Already split - close first (Ctrl+Shift+\\)")
+		return
+	}
+	// Split showing the same tab in both panes
+	m.split.SplitHorizontal(m.tabs.ActiveIndex())
+	m.SetStatusMessage("Horizontal split created")
+}
+
+// SplitVertical creates a vertical split (top/bottom).
+func (m *Model) SplitVertical() {
+	if m.split.IsSplit() {
+		m.SetStatusMessage("Already split - close first (Ctrl+Shift+\\)")
+		return
+	}
+	// Split showing the same tab in both panes
+	m.split.SplitVertical(m.tabs.ActiveIndex())
+	m.SetStatusMessage("Vertical split created")
+}
+
+// CloseSplit closes the split view.
+func (m *Model) CloseSplit() {
+	if !m.split.IsSplit() {
+		m.SetStatusMessage("No split to close")
+		return
+	}
+	m.split.CloseSplit()
+	m.SetStatusMessage("Split closed")
+}
+
+// NextPane switches to the next pane.
+func (m *Model) NextPane() {
+	if !m.split.IsSplit() {
+		return
+	}
+	// Save current pane state
+	m.split.SavePaneState(
+		m.split.ActivePaneIndex(),
+		m.viewportTopLine,
+		m.viewportLeftColumn,
+		m.buffer.CursorPos(),
+	)
+
+	m.split.NextPane()
+
+	// Restore new pane state
+	topLine, leftCol, cursorPos := m.split.RestorePaneState(m.split.ActivePaneIndex())
+	m.viewportTopLine = topLine
+	m.viewportLeftColumn = leftCol
+
+	// Switch to the tab this pane is showing
+	paneTabIndex := m.split.GetActiveTabIndex()
+	if paneTabIndex != m.tabs.ActiveIndex() {
+		m.syncToActiveTab()
+		m.tabs.SelectTab(paneTabIndex)
+		m.syncFromActiveTab()
+	}
+
+	// Restore cursor position
+	if cursorPos > 0 && cursorPos <= m.buffer.Len() {
+		m.buffer.MoveTo(cursorPos)
+	}
+}
+
+// PrevPane switches to the previous pane.
+func (m *Model) PrevPane() {
+	if !m.split.IsSplit() {
+		return
+	}
+	// Save current pane state
+	m.split.SavePaneState(
+		m.split.ActivePaneIndex(),
+		m.viewportTopLine,
+		m.viewportLeftColumn,
+		m.buffer.CursorPos(),
+	)
+
+	m.split.PrevPane()
+
+	// Restore new pane state
+	topLine, leftCol, cursorPos := m.split.RestorePaneState(m.split.ActivePaneIndex())
+	m.viewportTopLine = topLine
+	m.viewportLeftColumn = leftCol
+
+	// Switch to the tab this pane is showing
+	paneTabIndex := m.split.GetActiveTabIndex()
+	if paneTabIndex != m.tabs.ActiveIndex() {
+		m.syncToActiveTab()
+		m.tabs.SelectTab(paneTabIndex)
+		m.syncFromActiveTab()
+	}
+
+	// Restore cursor position
+	if cursorPos > 0 && cursorPos <= m.buffer.Len() {
+		m.buffer.MoveTo(cursorPos)
+	}
+}
+
+// SetPaneTab sets which tab the active pane shows.
+func (m *Model) SetPaneTab(tabIndex int) {
+	if tabIndex >= 0 && tabIndex < m.tabs.Count() {
+		m.split.SetPaneTab(m.split.ActivePaneIndex(), tabIndex)
+		m.syncToActiveTab()
+		m.tabs.SelectTab(tabIndex)
+		m.syncFromActiveTab()
+	}
 }

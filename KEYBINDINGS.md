@@ -39,6 +39,18 @@ When recording, "REC" is shown in the status bar instead of "INS".
 
 ---
 
+## Split View
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Horizontal Split | `Ctrl+\` | Split side by side (left/right) |
+| Vertical Split | `Ctrl+Shift+-` | Split stacked (top/bottom) |
+| Close Split | `Ctrl+Shift+\` | Close split view |
+| Focus Left/Top | `Alt+Left` or `Alt+H` | Switch to left/top pane |
+| Focus Right/Bottom | `Alt+Right` or `Alt+L` | Switch to right/bottom pane |
+
+---
+
 ## Navigation
 
 ### Basic Movement

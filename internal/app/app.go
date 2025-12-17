@@ -354,6 +354,35 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.inputPrompt = "Save as: "
 		return m, nil
 
+	case "ctrl+\\":
+		// Horizontal split (side by side)
+		m.SplitHorizontal()
+		return m, nil
+
+	case "ctrl+shift+-":
+		// Vertical split (top/bottom)
+		m.SplitVertical()
+		return m, nil
+
+	case "ctrl+shift+\\":
+		// Close split
+		m.CloseSplit()
+		return m, nil
+
+	case "alt+left", "alt+h":
+		// Switch to left/top pane
+		if m.IsSplit() && m.split.ActivePaneIndex() == 1 {
+			m.PrevPane()
+		}
+		return m, nil
+
+	case "alt+right", "alt+l":
+		// Switch to right/bottom pane
+		if m.IsSplit() && m.split.ActivePaneIndex() == 0 {
+			m.NextPane()
+		}
+		return m, nil
+
 	case "ctrl+g":
 		m.mode = ModeGoto
 		m.inputBuffer = ""
@@ -1647,8 +1676,12 @@ func (m *Model) View() string {
 	b.WriteString(m.renderHeader())
 	b.WriteString("\n")
 
-	// Editor area
-	b.WriteString(m.renderEditor())
+	// Editor area (with split support)
+	if m.IsSplit() {
+		b.WriteString(m.renderSplitEditor())
+	} else {
+		b.WriteString(m.renderEditor())
+	}
 
 	// Status bar
 	b.WriteString(m.renderStatusBar())
@@ -1736,6 +1769,153 @@ func (m *Model) renderTabBar() string {
 	}
 
 	return b.String()
+}
+
+// renderSplitEditor renders the editor area with split panes.
+func (m *Model) renderSplitEditor() string {
+	var b strings.Builder
+
+	// Calculate editor area height
+	editorHeight := m.height - 3
+	if m.showTabs && m.TabCount() > 1 {
+		editorHeight--
+	}
+	if editorHeight < 1 {
+		editorHeight = 1
+	}
+
+	// Calculate pane dimensions
+	m.split.CalculatePaneDimensions(m.width, editorHeight)
+
+	switch m.split.Direction() {
+	case SplitHorizontal:
+		// Side by side - render line by line
+		panes := m.split.Panes()
+		leftPane := panes[0]
+		rightPane := panes[1]
+
+		// Get content for each pane
+		leftLines := m.renderPaneLines(leftPane, leftPane.height)
+		rightLines := m.renderPaneLines(rightPane, rightPane.height)
+
+		// Combine line by line
+		for i := 0; i < editorHeight; i++ {
+			leftLine := ""
+			rightLine := ""
+
+			if i < len(leftLines) {
+				leftLine = leftLines[i]
+			}
+			if i < len(rightLines) {
+				rightLine = rightLines[i]
+			}
+
+			// Pad left pane to width
+			leftLine = padOrTruncate(leftLine, leftPane.width)
+
+			// Add separator (│) with highlighting for active pane
+			separator := "│"
+			if m.split.ActivePaneIndex() == 0 {
+				separator = styles.TabActiveStyle.Render("│")
+			} else {
+				separator = styles.TabInactiveStyle.Render("│")
+			}
+
+			b.WriteString(leftLine)
+			b.WriteString(separator)
+			b.WriteString(rightLine)
+			b.WriteString("\n")
+		}
+
+	case SplitVertical:
+		// Stacked - render top pane, separator, bottom pane
+		panes := m.split.Panes()
+		topPane := panes[0]
+		bottomPane := panes[1]
+
+		// Render top pane
+		topLines := m.renderPaneLines(topPane, topPane.height)
+		for _, line := range topLines {
+			b.WriteString(padOrTruncate(line, m.width))
+			b.WriteString("\n")
+		}
+
+		// Separator line
+		separator := strings.Repeat("─", m.width)
+		if m.split.ActivePaneIndex() == 0 {
+			b.WriteString(styles.TabActiveStyle.Render(separator))
+		} else {
+			b.WriteString(styles.TabInactiveStyle.Render(separator))
+		}
+		b.WriteString("\n")
+
+		// Render bottom pane
+		bottomLines := m.renderPaneLines(bottomPane, bottomPane.height)
+		for _, line := range bottomLines {
+			b.WriteString(padOrTruncate(line, m.width))
+			b.WriteString("\n")
+		}
+	}
+
+	return b.String()
+}
+
+// renderPaneLines renders content lines for a pane.
+func (m *Model) renderPaneLines(pane *Pane, height int) []string {
+	lines := make([]string, 0, height)
+
+	// Get the tab this pane is showing
+	if pane.tabIndex >= m.tabs.Count() {
+		pane.tabIndex = 0
+	}
+	tab := m.tabs.Tabs()[pane.tabIndex]
+
+	// Use pane's viewport
+	topLine := pane.viewportTopLine
+	lineCount := tab.buffer.LineCount()
+
+	for i := 0; i < height; i++ {
+		lineNum := topLine + i
+		if lineNum >= lineCount {
+			// Empty line after file content
+			lines = append(lines, "")
+			continue
+		}
+
+		var lineBuilder strings.Builder
+
+		// Line number
+		if m.showLineNumbers {
+			// Check if this is the current line (cursor is here)
+			isCurrentLine := (pane.tabIndex == m.tabs.ActiveIndex() &&
+				pane == m.split.ActivePane() &&
+				lineNum == tab.buffer.CurrentLine())
+
+			if isCurrentLine {
+				lineBuilder.WriteString(lineNumberStyle.Render(fmt.Sprintf("→%3d ", lineNum+1)))
+			} else {
+				lineBuilder.WriteString(lineNumberStyle.Render(fmt.Sprintf(" %3d ", lineNum+1)))
+			}
+		}
+
+		// Line content
+		lineContent := tab.buffer.Line(lineNum)
+		lineBuilder.WriteString(lineContent)
+
+		lines = append(lines, lineBuilder.String())
+	}
+
+	return lines
+}
+
+// padOrTruncate ensures a string is exactly the given width.
+func padOrTruncate(s string, width int) string {
+	// Simple rune-based length (ignoring ANSI codes for now)
+	runes := []rune(s)
+	if len(runes) >= width {
+		return string(runes[:width])
+	}
+	return s + strings.Repeat(" ", width-len(runes))
 }
 
 // renderEditor renders the main editor area.
