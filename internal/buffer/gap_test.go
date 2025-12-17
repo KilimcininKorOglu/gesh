@@ -219,3 +219,182 @@ func TestDeleteForwardFromBeginning(t *testing.T) {
 		t.Errorf("DeleteForward() from empty = %c, want 0", r)
 	}
 }
+
+func TestLen(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		wantLen int
+	}{
+		{"empty", "", 0},
+		{"simple", "Hello", 5},
+		{"unicode", "Merhaba", 7},
+		{"emoji", "Hi 🌍", 4}, // 4 runes: H, i, space, emoji
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var gb *GapBuffer
+			if tt.input == "" {
+				gb = New()
+			} else {
+				gb = NewFromString(tt.input)
+			}
+
+			if got := gb.Len(); got != tt.wantLen {
+				t.Errorf("Len() = %d, want %d", got, tt.wantLen)
+			}
+		})
+	}
+}
+
+func TestCursorPos(t *testing.T) {
+	gb := New()
+	if gb.CursorPos() != 0 {
+		t.Errorf("CursorPos() on empty = %d, want 0", gb.CursorPos())
+	}
+
+	gb.InsertString("Hello")
+	if gb.CursorPos() != 5 {
+		t.Errorf("CursorPos() after insert = %d, want 5", gb.CursorPos())
+	}
+}
+
+func TestMoveLeft(t *testing.T) {
+	gb := NewFromString("Hello")
+
+	// Cursor starts at end (position 5)
+	if gb.CursorPos() != 5 {
+		t.Errorf("Initial CursorPos() = %d, want 5", gb.CursorPos())
+	}
+
+	// Move left
+	ok := gb.MoveLeft()
+	if !ok {
+		t.Error("MoveLeft() returned false, want true")
+	}
+	if gb.CursorPos() != 4 {
+		t.Errorf("CursorPos() after MoveLeft = %d, want 4", gb.CursorPos())
+	}
+
+	// Move to beginning
+	for gb.MoveLeft() {
+	}
+	if gb.CursorPos() != 0 {
+		t.Errorf("CursorPos() at beginning = %d, want 0", gb.CursorPos())
+	}
+
+	// Try to move left at beginning
+	ok = gb.MoveLeft()
+	if ok {
+		t.Error("MoveLeft() at beginning returned true, want false")
+	}
+}
+
+func TestMoveRight(t *testing.T) {
+	gb := NewFromString("Hello")
+
+	// Move cursor to beginning first
+	gb.MoveToStart()
+	if gb.CursorPos() != 0 {
+		t.Errorf("CursorPos() after MoveToStart = %d, want 0", gb.CursorPos())
+	}
+
+	// Move right
+	ok := gb.MoveRight()
+	if !ok {
+		t.Error("MoveRight() returned false, want true")
+	}
+	if gb.CursorPos() != 1 {
+		t.Errorf("CursorPos() after MoveRight = %d, want 1", gb.CursorPos())
+	}
+
+	// Move to end
+	for gb.MoveRight() {
+	}
+	if gb.CursorPos() != 5 {
+		t.Errorf("CursorPos() at end = %d, want 5", gb.CursorPos())
+	}
+
+	// Try to move right at end
+	ok = gb.MoveRight()
+	if ok {
+		t.Error("MoveRight() at end returned true, want false")
+	}
+}
+
+func TestMoveTo(t *testing.T) {
+	gb := NewFromString("Hello World")
+
+	tests := []struct {
+		name     string
+		pos      int
+		wantPos  int
+	}{
+		{"move to middle", 5, 5},
+		{"move to start", 0, 0},
+		{"move to end", 11, 11},
+		{"negative clamped to 0", -5, 0},
+		{"beyond end clamped", 100, 11},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gb.MoveTo(tt.pos)
+			if gb.CursorPos() != tt.wantPos {
+				t.Errorf("CursorPos() after MoveTo(%d) = %d, want %d", tt.pos, gb.CursorPos(), tt.wantPos)
+			}
+		})
+	}
+}
+
+func TestMoveToStartEnd(t *testing.T) {
+	gb := NewFromString("Hello")
+
+	// Move to start
+	gb.MoveToStart()
+	if gb.CursorPos() != 0 {
+		t.Errorf("CursorPos() after MoveToStart = %d, want 0", gb.CursorPos())
+	}
+
+	// Move to end
+	gb.MoveToEnd()
+	if gb.CursorPos() != 5 {
+		t.Errorf("CursorPos() after MoveToEnd = %d, want 5", gb.CursorPos())
+	}
+}
+
+func TestDeleteForwardWithMoveTo(t *testing.T) {
+	gb := NewFromString("Hello")
+
+	// Move cursor to beginning
+	gb.MoveToStart()
+
+	// Now DeleteForward should delete 'H'
+	r := gb.DeleteForward()
+	if r != 'H' {
+		t.Errorf("DeleteForward() = %c, want 'H'", r)
+	}
+
+	if gb.Len() != 4 {
+		t.Errorf("Len() after delete = %d, want 4", gb.Len())
+	}
+}
+
+func TestInsertInMiddle(t *testing.T) {
+	gb := NewFromString("Helo")
+
+	// Move cursor to position 3 (after "Hel")
+	gb.MoveTo(3)
+
+	// Insert 'l'
+	gb.Insert('l')
+
+	// Move to end to read full string
+	gb.MoveToEnd()
+
+	// Verify length
+	if gb.Len() != 5 {
+		t.Errorf("Len() = %d, want 5", gb.Len())
+	}
+}

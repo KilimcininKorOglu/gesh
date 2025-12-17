@@ -123,3 +123,72 @@ func (gb *GapBuffer) DeleteForward() rune {
 	gb.gapEnd++
 	return r
 }
+
+// Len returns the number of runes in the buffer (excluding the gap).
+func (gb *GapBuffer) Len() int {
+	return len(gb.data) - gb.gapSize()
+}
+
+// CursorPos returns the current cursor position (0-indexed).
+func (gb *GapBuffer) CursorPos() int {
+	return gb.gapStart
+}
+
+// MoveLeft moves the cursor one position to the left.
+// Returns false if already at the beginning.
+func (gb *GapBuffer) MoveLeft() bool {
+	if gb.gapStart == 0 {
+		return false
+	}
+
+	// Move one character from before the gap to after the gap
+	gb.gapEnd--
+	gb.gapStart--
+	gb.data[gb.gapEnd] = gb.data[gb.gapStart]
+	return true
+}
+
+// MoveRight moves the cursor one position to the right.
+// Returns false if already at the end.
+func (gb *GapBuffer) MoveRight() bool {
+	if gb.gapEnd >= len(gb.data) {
+		return false
+	}
+
+	// Move one character from after the gap to before the gap
+	gb.data[gb.gapStart] = gb.data[gb.gapEnd]
+	gb.gapStart++
+	gb.gapEnd++
+	return true
+}
+
+// MoveTo moves the cursor to the specified position.
+// Position is clamped to valid range [0, Len()].
+func (gb *GapBuffer) MoveTo(pos int) {
+	// Clamp position to valid range
+	if pos < 0 {
+		pos = 0
+	}
+	textLen := gb.Len()
+	if pos > textLen {
+		pos = textLen
+	}
+
+	// Move cursor to target position
+	for gb.gapStart > pos {
+		gb.MoveLeft()
+	}
+	for gb.gapStart < pos {
+		gb.MoveRight()
+	}
+}
+
+// MoveToStart moves the cursor to the beginning of the buffer.
+func (gb *GapBuffer) MoveToStart() {
+	gb.MoveTo(0)
+}
+
+// MoveToEnd moves the cursor to the end of the buffer.
+func (gb *GapBuffer) MoveToEnd() {
+	gb.MoveTo(gb.Len())
+}
