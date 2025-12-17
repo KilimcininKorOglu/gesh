@@ -55,6 +55,11 @@ func main() {
 
 		case !strings.HasPrefix(arg, "-"):
 			filepath = arg
+
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown option: %s\n", arg)
+			fmt.Fprintln(os.Stderr, "Use --help for usage information")
+			os.Exit(4) // Exit code 4: Invalid argument
 		}
 	}
 
@@ -67,9 +72,12 @@ func main() {
 			if os.IsNotExist(err) {
 				// New file
 				model = app.NewFromFile(filepath, filepath, "")
+			} else if os.IsPermission(err) {
+				fmt.Fprintf(os.Stderr, "Permission denied: %s\n", filepath)
+				os.Exit(3) // Exit code 3: Permission error
 			} else {
 				fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
-				os.Exit(1)
+				os.Exit(2) // Exit code 2: File not found / read error
 			}
 		} else {
 			model = app.NewFromFile(filepath, filepath, string(content))
