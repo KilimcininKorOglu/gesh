@@ -51,6 +51,17 @@ When recording, "REC" is shown in the status bar instead of "INS".
 
 ---
 
+## Edit Modes
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Toggle Insert/Overwrite | `Insert` | Switch between INS and OVR mode |
+
+In Insert mode (INS), new characters are inserted at cursor position.
+In Overwrite mode (OVR), new characters replace existing characters.
+
+---
+
 ## Navigation
 
 ### Basic Movement
