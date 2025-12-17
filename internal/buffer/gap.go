@@ -47,3 +47,79 @@ func NewFromString(s string) *GapBuffer {
 		gapEnd:   totalSize,
 	}
 }
+
+// gapSize returns the current size of the gap.
+func (gb *GapBuffer) gapSize() int {
+	return gb.gapEnd - gb.gapStart
+}
+
+// expandGap grows the gap when it becomes too small.
+// It allocates a new larger array and copies the data.
+func (gb *GapBuffer) expandGap(minSize int) {
+	newGapSize := defaultGapSize
+	if minSize > newGapSize {
+		newGapSize = minSize
+	}
+
+	newData := make([]rune, len(gb.data)+newGapSize)
+
+	// Copy text before the gap
+	copy(newData, gb.data[:gb.gapStart])
+
+	// Copy text after the gap to the new position
+	newGapEnd := gb.gapStart + gb.gapSize() + newGapSize
+	copy(newData[newGapEnd:], gb.data[gb.gapEnd:])
+
+	gb.data = newData
+	gb.gapEnd = gb.gapStart + gb.gapSize() + newGapSize
+}
+
+// Insert adds a single rune at the cursor position (gapStart).
+// The cursor moves one position to the right after insertion.
+func (gb *GapBuffer) Insert(r rune) {
+	if gb.gapSize() == 0 {
+		gb.expandGap(1)
+	}
+
+	gb.data[gb.gapStart] = r
+	gb.gapStart++
+}
+
+// InsertString adds a string at the cursor position.
+// The cursor moves to the end of the inserted string.
+func (gb *GapBuffer) InsertString(s string) {
+	runes := []rune(s)
+	if len(runes) == 0 {
+		return
+	}
+
+	if gb.gapSize() < len(runes) {
+		gb.expandGap(len(runes))
+	}
+
+	copy(gb.data[gb.gapStart:], runes)
+	gb.gapStart += len(runes)
+}
+
+// Delete removes the rune before the cursor (backspace behavior).
+// Returns the deleted rune, or 0 if there's nothing to delete.
+func (gb *GapBuffer) Delete() rune {
+	if gb.gapStart == 0 {
+		return 0
+	}
+
+	gb.gapStart--
+	return gb.data[gb.gapStart]
+}
+
+// DeleteForward removes the rune after the cursor (delete key behavior).
+// Returns the deleted rune, or 0 if there's nothing to delete.
+func (gb *GapBuffer) DeleteForward() rune {
+	if gb.gapEnd >= len(gb.data) {
+		return 0
+	}
+
+	r := gb.data[gb.gapEnd]
+	gb.gapEnd++
+	return r
+}
