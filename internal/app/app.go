@@ -6,6 +6,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/KilimcininKorOglu/gesh/internal/file"
 )
 
 // Styles for the UI components
@@ -70,6 +72,11 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// Handle save-as mode
+	if m.mode == ModeSaveAs {
+		return m.handleSaveAsInput(msg)
+	}
+
 	// Normal mode key handling
 	switch msg.String() {
 	case "ctrl+x":
@@ -84,6 +91,9 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+c":
 		m.quitting = true
 		return m, tea.Quit
+
+	case "ctrl+s":
+		return m.saveFile()
 
 	// Navigation
 	case "up", "ctrl+p":
@@ -182,6 +192,60 @@ func (m *Model) moveToLineEnd() {
 	currentLine := m.buffer.CurrentLine()
 	lineEnd := m.buffer.LineEnd(currentLine)
 	m.buffer.MoveTo(lineEnd)
+}
+
+// saveFile saves the buffer to file.
+func (m *Model) saveFile() (tea.Model, tea.Cmd) {
+	// If no filepath, enter save-as mode
+	if m.filepath == "" {
+		m.mode = ModeSaveAs
+		m.inputBuffer = ""
+		m.inputPrompt = "Save as: "
+		return m, nil
+	}
+
+	// Save to existing filepath
+	err := file.Save(m.filepath, m.Content())
+	if err != nil {
+		m.SetStatusMessage("Error: " + err.Error())
+		return m, nil
+	}
+
+	m.modified = false
+	m.SetStatusMessage("Saved: " + m.filename)
+	return m, nil
+}
+
+// handleSaveAsInput handles input in save-as mode.
+func (m *Model) handleSaveAsInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		if m.inputBuffer != "" {
+			m.SetFilepath(m.inputBuffer)
+			m.mode = ModeNormal
+			m.inputBuffer = ""
+			return m.saveFile()
+		}
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	default:
+		if len(msg.Runes) > 0 {
+			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
+	}
 }
 
 // View renders the UI.
@@ -339,13 +403,22 @@ func (m *Model) renderStatusBar() string {
 func (m *Model) renderHelpBar() string {
 	var helps []string
 
-	if m.mode == ModeQuit {
+	switch m.mode {
+	case ModeQuit:
 		helps = []string{
 			helpKeyStyle.Render("Y") + helpStyle.Render(" Yes"),
 			helpKeyStyle.Render("N") + helpStyle.Render(" No"),
 			helpKeyStyle.Render("Esc") + helpStyle.Render(" Cancel"),
 		}
-	} else {
+	case ModeSaveAs:
+		// Show input prompt
+		prompt := m.inputPrompt + m.inputBuffer + "█"
+		padding := m.width - len(prompt) - 2
+		if padding < 0 {
+			padding = 0
+		}
+		return helpStyle.Render(" " + prompt + strings.Repeat(" ", padding))
+	default:
 		helps = []string{
 			helpKeyStyle.Render("^X") + helpStyle.Render(" Exit"),
 			helpKeyStyle.Render("^S") + helpStyle.Render(" Save"),

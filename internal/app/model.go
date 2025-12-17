@@ -17,6 +17,8 @@ const (
 	ModeGoto
 	// ModeQuit is the quit confirmation mode.
 	ModeQuit
+	// ModeSaveAs is the "save as" mode for entering filename.
+	ModeSaveAs
 )
 
 // Model is the main Bubble Tea model for the editor.
@@ -134,4 +136,29 @@ func (m *Model) Height() int {
 func (m *Model) SetSize(width, height int) {
 	m.width = width
 	m.height = height
+}
+
+// Filepath returns the current file path.
+func (m *Model) Filepath() string {
+	return m.filepath
+}
+
+// SetFilepath sets the file path and updates filename.
+func (m *Model) SetFilepath(path string) {
+	m.filepath = path
+	if path != "" {
+		// Extract filename from path
+		for i := len(path) - 1; i >= 0; i-- {
+			if path[i] == '/' || path[i] == '\\' {
+				m.filename = path[i+1:]
+				return
+			}
+		}
+		m.filename = path
+	}
+}
+
+// Content returns the buffer content as string.
+func (m *Model) Content() string {
+	return m.buffer.String()
 }
