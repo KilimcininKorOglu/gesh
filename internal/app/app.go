@@ -115,8 +115,25 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case "ctrl+c":
+		if m.selecting {
+			m.copySelection()
+			return m, nil
+		}
 		m.quitting = true
 		return m, tea.Quit
+
+	case "ctrl+n":
+		if m.modified {
+			m.SetStatusMessage("Save first or force quit with Ctrl+C")
+			return m, nil
+		}
+		m.buffer = buffer.New()
+		m.history = buffer.NewHistory()
+		m.filename = "[New File]"
+		m.filepath = ""
+		m.modified = false
+		m.SetStatusMessage("New file")
+		return m, nil
 
 	case "ctrl+s":
 		return m.saveFile()
@@ -169,26 +186,62 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.moveWordRight()
 		return m, nil
 
+	case "ctrl+ ":
+		m.toggleSelection()
+		return m, nil
+
+	// Selection with shift
+	case "shift+up":
+		m.startSelection()
+		m.moveCursorUp()
+		m.updateSelection()
+		return m, nil
+	case "shift+down":
+		m.startSelection()
+		m.moveCursorDown()
+		m.updateSelection()
+		return m, nil
+	case "shift+left":
+		m.startSelection()
+		m.buffer.MoveLeft()
+		m.updateSelection()
+		return m, nil
+	case "shift+right":
+		m.startSelection()
+		m.buffer.MoveRight()
+		m.updateSelection()
+		return m, nil
+
 	// Navigation
 	case "up", "ctrl+p":
+		m.clearSelection()
 		m.moveCursorUp()
-	case "down", "ctrl+n":
+	case "down":
+		m.clearSelection()
 		m.moveCursorDown()
 	case "left", "ctrl+b":
+		m.clearSelection()
 		m.buffer.MoveLeft()
 	case "right", "ctrl+f":
+		m.clearSelection()
 		m.buffer.MoveRight()
 	case "home", "ctrl+a":
+		m.clearSelection()
 		m.moveToLineStart()
 	case "end", "ctrl+e":
+		m.clearSelection()
 		m.moveToLineEnd()
 	case "ctrl+home":
+		m.clearSelection()
 		m.buffer.MoveToStart()
 	case "ctrl+end":
+		m.clearSelection()
 		m.buffer.MoveToEnd()
 	case "pgup":
+		m.clearSelection()
 		m.pageUp()
 	case "pgdown":
+		m.clearSelection()
 		m.pageDown()
 
 	// Editing
@@ -885,6 +938,64 @@ func (m *Model) moveWordRight() {
 // isSpace checks if a rune is a whitespace character.
 func isSpace(r rune) bool {
 	return r == ' ' || r == '\t' || r == '\n' || r == '\r'
+}
+
+// toggleSelection toggles selection mode.
+func (m *Model) toggleSelection() {
+	if m.selecting {
+		m.clearSelection()
+		m.SetStatusMessage("Selection ended")
+	} else {
+		m.selecting = true
+		m.selectionStart = m.buffer.CursorPos()
+		m.selectionEnd = m.selectionStart
+		m.SetStatusMessage("Selection started")
+	}
+}
+
+// startSelection starts selection if not already selecting.
+func (m *Model) startSelection() {
+	if !m.selecting {
+		m.selecting = true
+		m.selectionStart = m.buffer.CursorPos()
+		m.selectionEnd = m.selectionStart
+	}
+}
+
+// updateSelection updates the selection end to current cursor position.
+func (m *Model) updateSelection() {
+	if m.selecting {
+		m.selectionEnd = m.buffer.CursorPos()
+	}
+}
+
+// clearSelection clears the current selection.
+func (m *Model) clearSelection() {
+	m.selecting = false
+	m.selectionStart = 0
+	m.selectionEnd = 0
+}
+
+// getSelectionBounds returns the start and end of selection in order.
+func (m *Model) getSelectionBounds() (int, int) {
+	start, end := m.selectionStart, m.selectionEnd
+	if start > end {
+		start, end = end, start
+	}
+	return start, end
+}
+
+// copySelection copies selected text to clipboard.
+func (m *Model) copySelection() {
+	if !m.selecting {
+		return
+	}
+	start, end := m.getSelectionBounds()
+	if start == end {
+		return
+	}
+	m.clipboard = m.buffer.Slice(start, end)
+	m.SetStatusMessage("Copied to clipboard")
 }
 
 // View renders the UI.
