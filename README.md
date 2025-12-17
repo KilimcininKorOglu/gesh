@@ -52,11 +52,11 @@ gesh --help
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+N` | New file |
+| `Ctrl+Alt+N` | New file |
 | `Ctrl+O` | Open file |
 | `Ctrl+S` | Save file |
 | `Ctrl+Shift+S` | Save as |
-| `Ctrl+X` | Exit (prompts to save if modified) |
+| `Ctrl+X` | Exit (or cut if selecting) |
 | `Ctrl+C` | Copy selection / Force quit |
 
 ### Navigation
@@ -64,8 +64,10 @@ gesh --help
 | Shortcut | Action |
 |----------|--------|
 | `↑` `↓` `←` `→` | Move cursor |
+| `Ctrl+P` / `Ctrl+N` | Up / Down (nano style) |
+| `Ctrl+B` / `Ctrl+F` | Left / Right (nano style) |
 | `Ctrl+←` / `Ctrl+→` | Move by word |
-| `Home` / `Ctrl+A` | Start of line |
+| `Home` / `Ctrl+A` | Start of line (2x = select all) |
 | `End` / `Ctrl+E` | End of line |
 | `Ctrl+Home` | Start of file |
 | `Ctrl+End` | End of file |

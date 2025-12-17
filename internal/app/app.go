@@ -139,7 +139,7 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.quitting = true
 		return m, tea.Quit
 
-	case "ctrl+n":
+	case "ctrl+alt+n":
 		if m.modified {
 			m.SetStatusMessage("Save first or force quit with Ctrl+C")
 			return m, nil
@@ -246,7 +246,7 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "up", "ctrl+p":
 		m.clearSelection()
 		m.moveCursorUp()
-	case "down":
+	case "down", "ctrl+n":
 		m.clearSelection()
 		m.moveCursorDown()
 	case "left", "ctrl+b":
