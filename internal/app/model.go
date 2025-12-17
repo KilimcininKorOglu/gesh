@@ -149,6 +149,7 @@ func New() *Model {
 		encoding:           tab.encoding,
 		lineEnding:         tab.lineEnding,
 		mode:               ModeNormal,
+		modified:           false, // New file, not modified yet
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
 		showTabs:           true,
@@ -172,6 +173,7 @@ func NewWithContent(content string) *Model {
 		encoding:           tab.encoding,
 		lineEnding:         tab.lineEnding,
 		mode:               ModeNormal,
+		modified:           false, // Content loaded, not modified yet
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
 		showTabs:           true,
@@ -198,6 +200,7 @@ func NewFromFile(filepath, filename, content string) *Model {
 		encoding:           tab.encoding,
 		lineEnding:         tab.lineEnding,
 		mode:               ModeNormal,
+		modified:           false, // Explicitly set - file just loaded
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
 		showTabs:           true,
@@ -224,6 +227,7 @@ func NewFromFileWithInfo(filepath, filename, content, encoding, lineEnding strin
 		encoding:           tab.encoding,
 		lineEnding:         tab.lineEnding,
 		mode:               ModeNormal,
+		modified:           false, // Explicitly set - file just loaded
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
 		showTabs:           true,
