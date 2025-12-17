@@ -1522,15 +1522,17 @@ func (m *Model) renderEditor() string {
 		lineNum := m.viewportTopLine + i
 
 		if lineNum < lineCount {
-			// Line number with current line marker
-			var lineNumStr string
-			if lineNum == cursorLine {
-				lineNumStr = lineNumberStyle.Render(fmt.Sprintf("→%d", lineNum+1))
-			} else {
-				lineNumStr = lineNumberStyle.Render(fmt.Sprintf(" %d", lineNum+1))
+			// Line number with current line marker (if enabled)
+			if m.showLineNumbers {
+				var lineNumStr string
+				if lineNum == cursorLine {
+					lineNumStr = lineNumberStyle.Render(fmt.Sprintf("→%d", lineNum+1))
+				} else {
+					lineNumStr = lineNumberStyle.Render(fmt.Sprintf(" %d", lineNum+1))
+				}
+				b.WriteString(lineNumStr)
+				b.WriteString(" │ ")
 			}
-			b.WriteString(lineNumStr)
-			b.WriteString(" │ ")
 
 			// Line content
 			lineContent := m.buffer.Line(lineNum)
@@ -1572,9 +1574,11 @@ func (m *Model) renderEditor() string {
 			}
 		} else {
 			// Empty line indicator
-			lineNumStr := lineNumberStyle.Render("~")
-			b.WriteString(lineNumStr)
-			b.WriteString(" │")
+			if m.showLineNumbers {
+				lineNumStr := lineNumberStyle.Render("~")
+				b.WriteString(lineNumStr)
+				b.WriteString(" │")
+			}
 		}
 
 		b.WriteString("\n")

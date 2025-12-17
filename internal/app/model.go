@@ -44,6 +44,9 @@ type Model struct {
 	modified bool
 	readonly bool
 
+	// Display options
+	showLineNumbers bool
+
 	// Terminal dimensions
 	width  int
 	height int
@@ -88,31 +91,34 @@ type Model struct {
 // New creates a new editor model with an empty buffer.
 func New() *Model {
 	return &Model{
-		buffer:   buffer.New(),
-		history:  buffer.NewHistory(),
-		filename: "[New File]",
-		mode:     ModeNormal,
+		buffer:          buffer.New(),
+		history:         buffer.NewHistory(),
+		filename:        "[New File]",
+		mode:            ModeNormal,
+		showLineNumbers: true,
 	}
 }
 
 // NewWithContent creates a new editor model with initial content.
 func NewWithContent(content string) *Model {
 	return &Model{
-		buffer:   buffer.NewFromString(content),
-		history:  buffer.NewHistory(),
-		filename: "[New File]",
-		mode:     ModeNormal,
+		buffer:          buffer.NewFromString(content),
+		history:         buffer.NewHistory(),
+		filename:        "[New File]",
+		mode:            ModeNormal,
+		showLineNumbers: true,
 	}
 }
 
 // NewFromFile creates a new editor model for a specific file.
 func NewFromFile(filepath, filename, content string) *Model {
 	return &Model{
-		buffer:   buffer.NewFromString(content),
-		history:  buffer.NewHistory(),
-		filename: filename,
-		filepath: filepath,
-		mode:     ModeNormal,
+		buffer:          buffer.NewFromString(content),
+		history:         buffer.NewHistory(),
+		filename:        filename,
+		filepath:        filepath,
+		mode:            ModeNormal,
+		showLineNumbers: true,
 	}
 }
 
@@ -239,4 +245,14 @@ func SetTheme(name string) {
 // GetCurrentTheme returns the name of the current theme.
 func GetCurrentTheme() string {
 	return currentTheme.Name
+}
+
+// SetShowLineNumbers sets whether line numbers are shown.
+func (m *Model) SetShowLineNumbers(show bool) {
+	m.showLineNumbers = show
+}
+
+// ToggleLineNumbers toggles line number display.
+func (m *Model) ToggleLineNumbers() {
+	m.showLineNumbers = !m.showLineNumbers
 }

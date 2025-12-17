@@ -21,6 +21,7 @@ func main() {
 	var readonly bool
 	var themeName string
 	var noConfig bool
+	var noLineNumbers bool
 
 	// Parse arguments
 	args := os.Args[1:]
@@ -55,6 +56,9 @@ func main() {
 
 		case arg == "-n" || arg == "--norc":
 			noConfig = true
+
+		case arg == "--no-line-numbers":
+			noLineNumbers = true
 
 		case strings.HasPrefix(arg, "+"):
 			// Parse +N or +N:M
@@ -132,6 +136,13 @@ func main() {
 		model.SetReadonly(true)
 	}
 
+	// Apply line numbers setting from config, CLI overrides
+	if noLineNumbers {
+		model.SetShowLineNumbers(false)
+	} else {
+		model.SetShowLineNumbers(cfg.Editor.LineNumbers)
+	}
+
 	// Go to specific line/column if specified
 	if startLine > 0 {
 		model.GotoLine(startLine, startCol)
@@ -157,6 +168,7 @@ func printHelp() {
 	fmt.Println("  -r, --readonly     Open file in read-only mode")
 	fmt.Println("  -t, --theme NAME   Set color theme (dark, light, monokai, dracula, gruvbox)")
 	fmt.Println("  -n, --norc         Do not load config file")
+	fmt.Println("  --no-line-numbers  Hide line numbers")
 	fmt.Println("  +N                 Open at line N")
 	fmt.Println("  +N:M               Open at line N, column M")
 	fmt.Println()
