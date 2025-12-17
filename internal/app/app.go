@@ -240,7 +240,7 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			// Quit without saving
 			m.quitting = true
 			return m, tea.Quit
-		case "esc":
+		case "c", "C", "esc":
 			// Cancel - go back to editing
 			m.mode = ModeNormal
 			m.SetStatusMessage("")
@@ -299,223 +299,259 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleLoadMacroInput(msg)
 	}
 
-	// Normal mode key handling
+	// Normal mode key handling - NANO COMPATIBLE
 	switch msg.String() {
+
+	// ==================== NANO FILE OPERATIONS ====================
+
 	case "ctrl+x":
-		// If selecting, cut selection
-		if m.selecting {
-			m.cutSelection()
-			return m, nil
-		}
-		// Otherwise exit - only ask if actually modified
+		// Nano: Exit (ask to save if modified)
 		if m.modified {
 			m.mode = ModeQuit
-			m.SetStatusMessage("Save changes? (Y)es, (N)o, (Esc)Cancel")
-			return m, nil
-		}
-		// Not modified, just quit immediately
-		m.quitting = true
-		return m, tea.Quit
-
-	case "ctrl+c":
-		if m.selecting {
-			m.copySelection()
+			m.SetStatusMessage("Save modified buffer? (Y)es, (N)o, (C)ancel")
 			return m, nil
 		}
 		m.quitting = true
 		return m, tea.Quit
 
-	case "ctrl+alt+n":
-		// New file in current tab (if not modified)
-		if m.modified {
-			m.SetStatusMessage("Save first or use Ctrl+T for new tab")
+	case "ctrl+o":
+		// Nano: Write Out (Save)
+		if m.filepath == "" {
+			m.mode = ModeSaveAs
+			m.inputBuffer = ""
+			m.inputPrompt = "File Name to Write: "
 			return m, nil
 		}
-		m.buffer = buffer.New()
-		m.history = buffer.NewHistory()
-		m.filename = "[New File]"
-		m.filepath = ""
-		m.modified = false
-		m.syncToActiveTab()
-		m.SetStatusMessage("New file")
-		return m, nil
-
-	case "ctrl+t":
-		// New tab
-		m.NewTab()
-		return m, nil
-
-	case "ctrl+w":
-		// If only one tab or in non-normal mode, close tab triggers search
-		if m.tabs.Count() <= 1 || m.mode != ModeNormal {
-			// Search mode
-			m.mode = ModeSearch
-			m.inputBuffer = m.searchQuery
-			m.inputPrompt = "Search: "
-			return m, nil
-		}
-		// Multiple tabs: close current tab
-		if m.modified {
-			m.SetStatusMessage("Save changes first (Ctrl+S)")
-			return m, nil
-		}
-		m.CloseTab()
-		m.SetStatusMessage(fmt.Sprintf("Tab closed (%d remaining)", m.TabCount()))
-		return m, nil
-
-	case "ctrl+tab", "ctrl+pgdn":
-		// Next tab
-		m.NextTab()
-		return m, nil
-
-	case "ctrl+shift+tab", "ctrl+pgup":
-		// Previous tab
-		m.PrevTab()
-		return m, nil
-
-	case "alt+1", "alt+2", "alt+3", "alt+4", "alt+5", "alt+6", "alt+7", "alt+8", "alt+9":
-		// Switch to tab by number
-		tabNum := int(msg.Runes[0] - '1')
-		if tabNum < m.TabCount() {
-			m.SelectTab(tabNum)
-		}
-		return m, nil
-
-	case "ctrl+m":
-		// Toggle macro recording
-		if m.macro.ToggleRecording() {
-			m.SetStatusMessage("Recording macro...")
-		} else {
-			m.SetStatusMessage(fmt.Sprintf("Macro recorded (%d keys)", m.macro.KeyCount()))
-		}
-		return m, nil
-
-	case "ctrl+shift+m":
-		// Play macro
-		if m.macro.IsRecording() {
-			m.SetStatusMessage("Stop recording first (Ctrl+M)")
-			return m, nil
-		}
-		if m.macro.KeyCount() == 0 {
-			m.SetStatusMessage("No macro recorded")
-			return m, nil
-		}
-		return m.playMacro()
-
-	case "alt+m":
-		// Save macro to file
-		if !m.macro.HasKeys() {
-			m.SetStatusMessage("No macro to save")
-			return m, nil
-		}
-		m.mode = ModeSaveMacro
-		m.inputBuffer = ""
-		m.inputPrompt = "Save macro as: "
-		return m, nil
-
-	case "alt+shift+m":
-		// Load macro from file
-		m.mode = ModeLoadMacro
-		m.inputBuffer = ""
-		m.inputPrompt = "Load macro: "
-		// Show available macros
-		if names, err := ListSavedMacros(); err == nil && len(names) > 0 {
-			m.SetStatusMessage("Available: " + strings.Join(names, ", "))
-		}
-		return m, nil
-
-	case "ctrl+s":
 		return m.saveFile()
 
-	case "ctrl+shift+s":
-		// Save As - always prompt for filename
-		m.mode = ModeSaveAs
-		m.inputBuffer = m.filepath
-		m.inputPrompt = "Save as: "
-		return m, nil
-
-	case "ctrl+\\":
-		// Horizontal split (side by side)
-		m.SplitHorizontal()
-		return m, nil
-
-	case "ctrl+shift+-":
-		// Vertical split (top/bottom)
-		m.SplitVertical()
-		return m, nil
-
-	case "ctrl+shift+\\":
-		// Close split
-		m.CloseSplit()
-		return m, nil
-
-	case "alt+left", "alt+h":
-		// Switch to left/top pane
-		if m.IsSplit() && m.split.ActivePaneIndex() == 1 {
-			m.PrevPane()
-		}
-		return m, nil
-
-	case "alt+right", "alt+l":
-		// Switch to right/bottom pane
-		if m.IsSplit() && m.split.ActivePaneIndex() == 0 {
-			m.NextPane()
-		}
+	case "ctrl+r":
+		// Nano: Read File (Insert file at cursor)
+		m.mode = ModeOpen
+		m.inputBuffer = ""
+		m.inputPrompt = "File to insert: "
 		return m, nil
 
 	case "ctrl+g":
-		m.mode = ModeGoto
-		m.inputBuffer = ""
-		m.inputPrompt = fmt.Sprintf("Go to line [1-%d]: ", m.buffer.LineCount())
+		// Nano: Display help text (show version/about info)
+		m.SetStatusMessage("GESH 1.0.0 - Nano-compatible text editor | ^X Exit | ^O Save | ^W Search")
 		return m, nil
 
-	case "f3":
+	// ==================== NANO SEARCH & REPLACE ====================
+
+	case "ctrl+w":
+		// Nano: Where Is (Search)
+		m.mode = ModeSearch
+		m.inputBuffer = m.searchQuery
+		m.inputPrompt = "Search: "
+		return m, nil
+
+	case "alt+w":
+		// Nano: Next search result
 		m.nextMatch()
 		return m, nil
 
-	case "shift+f3":
+	case "ctrl+q":
+		// Nano: Search backward (Where Was)
 		m.prevMatch()
 		return m, nil
 
-	case "ctrl+r":
+	case "ctrl+\\", "alt+r":
+		// Nano: Replace
 		m.mode = ModeReplace
 		m.inputBuffer = m.searchQuery
-		m.inputPrompt = "Replace: "
+		m.inputPrompt = "Search (to replace): "
 		return m, nil
 
-	case "ctrl+shift+r":
-		m.mode = ModeReplaceAll
-		m.inputBuffer = m.searchQuery
-		m.inputPrompt = "Replace all: "
-		return m, nil
+	// ==================== NANO EDITING ====================
 
-	case "ctrl+o":
-		m.mode = ModeOpen
-		m.inputBuffer = ""
-		m.inputPrompt = "Open file: "
+	case "ctrl+k":
+		// Nano: Cut line (or selection)
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+			return m, nil
+		}
+		if m.selecting {
+			m.cutSelection()
+		} else {
+			m.cutLine()
+		}
 		return m, nil
 
 	case "ctrl+u":
-		m.cutLine()
-		return m, nil
-
-	case "ctrl+v":
+		// Nano: Uncut/Paste
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+			return m, nil
+		}
 		m.paste()
 		return m, nil
 
-	case "ctrl+left":
+	case "alt+6":
+		// Nano: Copy line (or selection)
+		if m.selecting {
+			m.copySelection()
+		} else {
+			m.copyLine()
+		}
+		return m, nil
+
+	case "alt+u":
+		// Nano: Undo
+		m.undo()
+		return m, nil
+
+	case "alt+e":
+		// Nano: Redo
+		m.redo()
+		return m, nil
+
+	case "ctrl+j":
+		// Nano: Justify (not implemented, show message)
+		m.SetStatusMessage("Justify not implemented")
+		return m, nil
+
+	case "ctrl+t":
+		// Nano: Execute command / Spell check (we use for new tab)
+		m.NewTab()
+		return m, nil
+
+	// ==================== NANO NAVIGATION ====================
+
+	case "ctrl+y":
+		// Nano: Page Up
+		m.clearSelection()
+		m.pageUp()
+		return m, scrollTick()
+
+	case "ctrl+v":
+		// Nano: Page Down
+		m.clearSelection()
+		m.pageDown()
+		return m, scrollTick()
+
+	case "alt+\\":
+		// Nano: Go to beginning of file
+		m.clearSelection()
+		m.buffer.MoveToStart()
+		m.ensureCursorVisible()
+		return m, nil
+
+	case "alt+/":
+		// Nano: Go to end of file
+		m.clearSelection()
+		m.buffer.MoveToEnd()
+		m.ensureCursorVisible()
+		return m, nil
+
+	case "ctrl+_", "alt+g":
+		// Nano: Go to line
+		m.mode = ModeGoto
+		m.inputBuffer = ""
+		m.inputPrompt = fmt.Sprintf("Enter line number [1-%d]: ", m.buffer.LineCount())
+		return m, nil
+
+	case "ctrl+c":
+		// Nano: Show cursor position
+		line := m.buffer.CurrentLine() + 1
+		col := m.buffer.CurrentColumn() + 1
+		total := m.buffer.LineCount()
+		pos := m.buffer.CursorPos()
+		length := m.buffer.Len()
+		percent := 0
+		if length > 0 {
+			percent = (pos * 100) / length
+		}
+		m.SetStatusMessage(fmt.Sprintf("line %d/%d (%d%%), col %d, char %d/%d", line, total, percent, col, pos, length))
+		return m, nil
+
+	case "ctrl+a":
+		// Nano: Go to beginning of line
+		m.clearSelection()
+		m.moveToLineStart()
+		return m, nil
+
+	case "ctrl+e":
+		// Nano: Go to end of line
+		m.clearSelection()
+		m.moveToLineEnd()
+		return m, nil
+
+	case "ctrl+p", "up":
+		// Nano: Previous line
+		m.clearSelection()
+		m.moveCursorUp()
+		return m, nil
+
+	case "ctrl+n", "down":
+		// Nano: Next line
+		m.clearSelection()
+		m.moveCursorDown()
+		return m, nil
+
+	case "ctrl+b", "left":
+		// Nano: Back one character
+		m.clearSelection()
+		m.buffer.MoveLeft()
+		return m, nil
+
+	case "ctrl+f", "right":
+		// Nano: Forward one character
+		m.clearSelection()
+		m.buffer.MoveRight()
+		return m, nil
+
+	case "alt+space", "ctrl+left":
+		// Nano: Back one word
+		m.clearSelection()
 		m.moveWordLeft()
 		return m, nil
 
-	case "ctrl+right":
+	case "ctrl+space", "ctrl+right":
+		// Nano: Forward one word
+		m.clearSelection()
 		m.moveWordRight()
 		return m, nil
 
-	case "ctrl+ ":
+	case "pgup":
+		m.clearSelection()
+		m.pageUp()
+		return m, scrollTick()
+
+	case "pgdown":
+		m.clearSelection()
+		m.pageDown()
+		return m, scrollTick()
+
+	case "home":
+		m.clearSelection()
+		m.moveToLineStart()
+		return m, nil
+
+	case "end":
+		m.clearSelection()
+		m.moveToLineEnd()
+		return m, nil
+
+	case "ctrl+home":
+		m.clearSelection()
+		m.buffer.MoveToStart()
+		m.ensureCursorVisible()
+		return m, nil
+
+	case "ctrl+end":
+		m.clearSelection()
+		m.buffer.MoveToEnd()
+		m.ensureCursorVisible()
+		return m, nil
+
+	// ==================== NANO SELECTION (Mark) ====================
+
+	case "alt+a", "ctrl+6":
+		// Nano: Set mark / Start selection
 		m.toggleSelection()
 		return m, nil
 
-	// Selection with shift
+	// Shift+arrow selection (modern extension)
 	case "shift+up":
 		m.startSelection()
 		m.moveCursorUp()
@@ -537,55 +573,10 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.updateSelection()
 		return m, nil
 
-	// Navigation
-	case "up", "ctrl+p":
-		m.clearSelection()
-		m.moveCursorUp()
-	case "down", "ctrl+n":
-		m.clearSelection()
-		m.moveCursorDown()
-	case "left", "ctrl+b":
-		m.clearSelection()
-		m.buffer.MoveLeft()
-	case "right", "ctrl+f":
-		m.clearSelection()
-		m.buffer.MoveRight()
-	case "home":
-		m.clearSelection()
-		m.moveToLineStart()
-	case "ctrl+a":
-		// Double Ctrl+A = select all
-		now := time.Now().UnixMilli()
-		if now-m.lastCtrlATime < 500 {
-			m.selectAll()
-			m.lastCtrlATime = 0
-		} else {
-			m.clearSelection()
-			m.moveToLineStart()
-			m.lastCtrlATime = now
-		}
-	case "end", "ctrl+e":
-		m.clearSelection()
-		m.moveToLineEnd()
-	case "ctrl+home":
-		m.clearSelection()
-		m.buffer.MoveToStart()
-	case "ctrl+end":
-		m.clearSelection()
-		m.buffer.MoveToEnd()
-	case "pgup":
-		m.clearSelection()
-		m.pageUp()
-		// Start smooth scroll animation
-		return m, scrollTick()
-	case "pgdown":
-		m.clearSelection()
-		m.pageDown()
-		// Start smooth scroll animation
-		return m, scrollTick()
+	// ==================== NANO DELETION ====================
 
-	// Editing (check readonly)
-	case "backspace":
+	case "ctrl+h", "backspace":
+		// Nano: Delete character before cursor
 		if m.readonly {
 			m.SetStatusMessage("File is read-only")
 			return m, nil
@@ -599,7 +590,10 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			})
 			m.setModified()
 		}
-	case "delete":
+		return m, nil
+
+	case "ctrl+d", "delete":
+		// Nano: Delete character under cursor
 		if m.readonly {
 			m.SetStatusMessage("File is read-only")
 			return m, nil
@@ -613,12 +607,53 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			})
 			m.setModified()
 		}
-	case "enter":
+		return m, nil
+
+	case "alt+backspace":
+		// Nano: Delete word to the left
 		if m.readonly {
 			m.SetStatusMessage("File is read-only")
 			return m, nil
 		}
-		// Get current line's indentation
+		m.deleteWordLeft()
+		return m, nil
+
+	case "ctrl+delete":
+		// Nano: Delete word to the right
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+			return m, nil
+		}
+		m.deleteWordRight()
+		return m, nil
+
+	// ==================== NANO OTHER ====================
+
+	case "alt+n":
+		// Nano: Toggle line numbers
+		m.showLineNumbers = !m.showLineNumbers
+		return m, nil
+
+	case "alt+p":
+		// Nano: Toggle whitespace display (not implemented)
+		m.SetStatusMessage("Whitespace display not implemented")
+		return m, nil
+
+	case "alt+x":
+		// Nano: Toggle expert mode (we just show a message)
+		m.SetStatusMessage("Expert mode not available")
+		return m, nil
+
+	case "ctrl+l":
+		// Nano: Refresh screen
+		return m, nil
+
+	case "ctrl+m", "enter":
+		// Nano: Insert newline (Enter)
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+			return m, nil
+		}
 		currentLine := m.buffer.CurrentLine()
 		lineContent := m.buffer.Line(currentLine)
 		indent := getIndent(lineContent)
@@ -635,7 +670,10 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			Text:     insertText,
 		})
 		m.setModified()
-	case "tab":
+		return m, nil
+
+	case "ctrl+i", "tab":
+		// Nano: Insert tab
 		if m.readonly {
 			m.SetStatusMessage("File is read-only")
 			return m, nil
@@ -648,26 +686,79 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			Text:     "    ",
 		})
 		m.setModified()
-
-	case "ctrl+z":
-		m.undo()
-		return m, nil
-
-	case "ctrl+y":
-		m.redo()
-		return m, nil
-
-	case "ctrl+k":
-		if m.readonly {
-			m.SetStatusMessage("File is read-only")
-			return m, nil
-		}
-		m.deleteLine()
 		return m, nil
 
 	case "insert":
 		// Toggle insert/overwrite mode
 		m.ToggleOverwriteMode()
+		return m, nil
+
+	// ==================== TAB MANAGEMENT (Extension) ====================
+
+	case "ctrl+tab", "ctrl+pgdn":
+		m.NextTab()
+		return m, nil
+
+	case "ctrl+shift+tab", "ctrl+pgup":
+		m.PrevTab()
+		return m, nil
+
+	// ==================== SPLIT VIEW (Extension) ====================
+
+	case "alt+\\\\":
+		m.SplitHorizontal()
+		return m, nil
+
+	case "alt+-":
+		m.SplitVertical()
+		return m, nil
+
+	case "alt+c":
+		m.CloseSplit()
+		return m, nil
+
+	case "alt+left", "alt+h":
+		if m.IsSplit() && m.split.ActivePaneIndex() == 1 {
+			m.PrevPane()
+		}
+		return m, nil
+
+	case "alt+right", "alt+l":
+		if m.IsSplit() && m.split.ActivePaneIndex() == 0 {
+			m.NextPane()
+		}
+		return m, nil
+
+	// ==================== MACRO (Extension) ====================
+
+	case "f4":
+		// Toggle macro recording
+		if m.macro.ToggleRecording() {
+			m.SetStatusMessage("Recording macro...")
+		} else {
+			m.SetStatusMessage(fmt.Sprintf("Macro recorded (%d keys)", m.macro.KeyCount()))
+		}
+		return m, nil
+
+	case "f5":
+		// Play macro
+		if m.macro.IsRecording() {
+			m.SetStatusMessage("Stop recording first (F4)")
+			return m, nil
+		}
+		if m.macro.KeyCount() == 0 {
+			m.SetStatusMessage("No macro recorded")
+			return m, nil
+		}
+		return m.playMacro()
+
+	case "f3":
+		// Find next (also nano compatible)
+		m.nextMatch()
+		return m, nil
+
+	case "shift+f3":
+		m.prevMatch()
 		return m, nil
 
 	default:
@@ -1569,6 +1660,106 @@ func (m *Model) cutLine() {
 	m.SetStatusMessage("Line cut to clipboard")
 }
 
+// copyLine copies the current line to clipboard (nano Alt+6 style).
+func (m *Model) copyLine() {
+	currentLine := m.buffer.CurrentLine()
+	m.clipboard = m.buffer.Line(currentLine)
+	// Include newline for consistency with cut
+	if currentLine < m.buffer.LineCount()-1 {
+		m.clipboard += "\n"
+	}
+	m.SetStatusMessage("Copied 1 line")
+}
+
+// deleteWordLeft deletes word to the left of cursor.
+func (m *Model) deleteWordLeft() {
+	if m.buffer.CursorPos() == 0 {
+		return
+	}
+
+	startPos := m.buffer.CursorPos()
+
+	// Move to start of word
+	m.moveWordLeft()
+	endPos := m.buffer.CursorPos()
+
+	if startPos == endPos {
+		return
+	}
+
+	// Delete from current position to original position
+	deletedText := m.buffer.Slice(endPos, startPos)
+	for i := endPos; i < startPos; i++ {
+		m.buffer.DeleteForward()
+	}
+
+	m.history.Push(buffer.EditOperation{
+		Type:     buffer.OpDelete,
+		Position: endPos,
+		Text:     deletedText,
+	})
+	m.setModified()
+}
+
+// deleteWordRight deletes word to the right of cursor.
+func (m *Model) deleteWordRight() {
+	if m.buffer.CursorPos() >= m.buffer.Len() {
+		return
+	}
+
+	startPos := m.buffer.CursorPos()
+
+	// Calculate end position (word right)
+	pos := startPos
+	length := m.buffer.Len()
+
+	// Skip current word
+	for pos < length {
+		r := m.buffer.RuneAt(pos)
+		if r == ' ' || r == '\n' || r == '\t' {
+			break
+		}
+		pos++
+	}
+	// Skip whitespace
+	for pos < length {
+		r := m.buffer.RuneAt(pos)
+		if r != ' ' && r != '\n' && r != '\t' {
+			break
+		}
+		pos++
+	}
+
+	if pos == startPos {
+		return
+	}
+
+	// Delete from start to calculated end
+	deletedText := m.buffer.Slice(startPos, pos)
+	for i := startPos; i < pos; i++ {
+		m.buffer.DeleteForward()
+	}
+
+	m.history.Push(buffer.EditOperation{
+		Type:     buffer.OpDelete,
+		Position: startPos,
+		Text:     deletedText,
+	})
+	m.setModified()
+}
+
+// ensureCursorVisible ensures the cursor is visible in the viewport.
+func (m *Model) ensureCursorVisible() {
+	currentLine := m.buffer.CurrentLine()
+	editorHeight := m.height - 3 // header + status + help
+
+	if currentLine < m.viewportTopLine {
+		m.viewportTopLine = currentLine
+	} else if currentLine >= m.viewportTopLine+editorHeight {
+		m.viewportTopLine = currentLine - editorHeight + 1
+	}
+}
+
 // paste pastes content from clipboard.
 func (m *Model) paste() {
 	if m.clipboard == "" {
@@ -2398,11 +2589,11 @@ func (m *Model) renderStatusBar() string {
 	return statusStyle.Render(leftContent + strings.Repeat(" ", padding) + rightInfo + " ") + "\n"
 }
 
-// renderHelpBar renders the bottom help bar.
+// renderHelpBar renders the bottom help bar (nano style).
 func (m *Model) renderHelpBar() string {
 	switch m.mode {
 	case ModeQuit:
-		content := " [Y] Yes  [N] No  [Esc] Cancel"
+		content := " [Y] Save & Exit  [N] Discard & Exit  [C] Cancel"
 		padding := m.width - len(content)
 		if padding < 0 {
 			padding = 0
@@ -2419,12 +2610,21 @@ func (m *Model) renderHelpBar() string {
 		return helpStyle.Render(prompt + strings.Repeat(" ", padding))
 
 	default:
-		// Normal mode help
-		content := " ^X Exit  ^S Save  ^O Open  ^W Search  ^G Goto  ^K Cut  ^V Paste"
-		padding := m.width - len(content)
-		if padding < 0 {
-			padding = 0
+		// Nano style help - always visible, two lines
+		line1 := "^G Help  ^O WriteOut  ^W Where Is  ^K Cut      ^C Cur Pos  ^X Exit"
+		line2 := "^R Read File  ^\\ Replace  ^U Paste  ^Y Prev Pg  ^V Next Pg  M-U Undo"
+
+		// Pad lines to width
+		pad1 := m.width - len(line1)
+		pad2 := m.width - len(line2)
+		if pad1 < 0 {
+			pad1 = 0
 		}
-		return helpStyle.Render(content + strings.Repeat(" ", padding))
+		if pad2 < 0 {
+			pad2 = 0
+		}
+
+		return helpStyle.Render(line1+strings.Repeat(" ", pad1)) + "\n" +
+			helpStyle.Render(line2+strings.Repeat(" ", pad2))
 	}
 }

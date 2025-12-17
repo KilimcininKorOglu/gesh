@@ -1,137 +1,72 @@
-# GESH Keybindings
+# GESH Keybindings (Nano Compatible)
+
+GESH uses keyboard shortcuts compatible with GNU nano. Users familiar with nano will feel right at home.
 
 ## File Operations
 
 | Action | Shortcut | Description |
 |--------|----------|-------------|
-| New File | `Ctrl+Alt+N` | Create new empty buffer |
-| New Tab | `Ctrl+T` | Open new tab |
-| Close Tab | `Ctrl+W` | Close current tab (search if only one tab) |
-| Open File | `Ctrl+O` | Open file dialog |
-| Save | `Ctrl+S` | Save current file |
-| Save As | `Ctrl+Shift+S` | Save with new name |
-| Exit | `Ctrl+X` | Exit editor (or cut if selecting) |
-
----
-
-## Tab Management
-
-| Action | Shortcut | Description |
-|--------|----------|-------------|
-| New Tab | `Ctrl+T` | Create new empty tab |
-| Close Tab | `Ctrl+W` | Close current tab |
-| Next Tab | `Ctrl+Tab` | Switch to next tab |
-| Next Tab | `Ctrl+PageDown` | Switch to next tab (alternate) |
-| Previous Tab | `Ctrl+Shift+Tab` | Switch to previous tab |
-| Previous Tab | `Ctrl+PageUp` | Switch to previous tab (alternate) |
-| Go to Tab 1-9 | `Alt+1` to `Alt+9` | Switch to specific tab |
-
----
-
-## Macro Recording
-
-| Action | Shortcut | Description |
-|--------|----------|-------------|
-| Toggle Recording | `Ctrl+M` | Start/stop recording macro |
-| Play Macro | `Ctrl+Shift+M` | Play recorded macro |
-| Save Macro | `Alt+M` | Save macro to file |
-| Load Macro | `Alt+Shift+M` | Load macro from file |
-
-When recording, "REC" is shown in the status bar instead of "INS".
-
-Macros are saved to `~/.config/gesh/macros.json` (or `%APPDATA%\gesh\macros.json` on Windows).
-In load macro mode, press Tab for name completion.
-
----
-
-## Split View
-
-| Action | Shortcut | Description |
-|--------|----------|-------------|
-| Horizontal Split | `Ctrl+\` | Split side by side (left/right) |
-| Vertical Split | `Ctrl+Shift+-` | Split stacked (top/bottom) |
-| Close Split | `Ctrl+Shift+\` | Close split view |
-| Focus Left/Top | `Alt+Left` or `Alt+H` | Switch to left/top pane |
-| Focus Right/Bottom | `Alt+Right` or `Alt+L` | Switch to right/bottom pane |
-
----
-
-## Edit Modes
-
-| Action | Shortcut | Description |
-|--------|----------|-------------|
-| Toggle Insert/Overwrite | `Insert` | Switch between INS and OVR mode |
-
-In Insert mode (INS), new characters are inserted at cursor position.
-In Overwrite mode (OVR), new characters replace existing characters.
-
----
-
-## Navigation
-
-### Basic Movement
-
-| Action | Shortcut | Alternative |
-|--------|----------|-------------|
-| Move Up | `↑` | `Ctrl+P` |
-| Move Down | `↓` | `Ctrl+N` |
-| Move Left | `←` | `Ctrl+B` |
-| Move Right | `→` | `Ctrl+F` |
-
-### Line Navigation
-
-| Action | Shortcut | Alternative |
-|--------|----------|-------------|
-| Line Start | `Home` | `Ctrl+A` |
-| Line End | `End` | `Ctrl+E` |
-
-### Word Navigation
-
-| Action | Shortcut |
-|--------|----------|
-| Previous Word | `Ctrl+←` |
-| Next Word | `Ctrl+→` |
-
-### Document Navigation
-
-| Action | Shortcut |
-|--------|----------|
-| Document Start | `Ctrl+Home` |
-| Document End | `Ctrl+End` |
-| Page Up | `PageUp` |
-| Page Down | `PageDown` |
-| Go to Line | `Ctrl+G` |
+| Exit | `Ctrl+X` | Exit (prompts to save if modified) |
+| Write Out (Save) | `Ctrl+O` | Save current file |
+| Read File | `Ctrl+R` | Insert file at cursor |
+| Help | `Ctrl+G` | Toggle help bar visibility |
 
 ---
 
 ## Editing
 
-### Basic Editing
-
-| Action | Shortcut |
-|--------|----------|
-| Delete Char (back) | `Backspace` |
-| Delete Char (forward) | `Delete` |
-| Delete Line | `Ctrl+K` |
-| Cut Line | `Ctrl+U` |
-| New Line | `Enter` |
-| Insert Tab | `Tab` |
-
-### Undo/Redo
-
-| Action | Shortcut |
-|--------|----------|
-| Undo | `Ctrl+Z` |
-| Redo | `Ctrl+Y` |
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Cut Line/Selection | `Ctrl+K` | Cut current line or selection |
+| Paste (Uncut) | `Ctrl+U` | Paste from clipboard |
+| Copy Line/Selection | `Alt+6` | Copy current line or selection |
+| Undo | `Alt+U` | Undo last action |
+| Redo | `Alt+E` | Redo last undone action |
+| Delete Char Left | `Backspace` / `Ctrl+H` | Delete character before cursor |
+| Delete Char Right | `Delete` / `Ctrl+D` | Delete character under cursor |
+| Delete Word Left | `Alt+Backspace` | Delete word to the left |
+| Delete Word Right | `Ctrl+Delete` | Delete word to the right |
+| New Line | `Enter` / `Ctrl+M` | Insert newline with auto-indent |
+| Insert Tab | `Tab` / `Ctrl+I` | Insert 4 spaces |
 
 ---
 
-## Selection
+## Navigation
 
 | Action | Shortcut | Description |
 |--------|----------|-------------|
-| Toggle Selection | `Ctrl+Space` | Start/stop selection mode |
-| Select All | `Ctrl+A` (2x) | Press twice to select all |
+| Up | `↑` / `Ctrl+P` | Move cursor up |
+| Down | `↓` / `Ctrl+N` | Move cursor down |
+| Left | `←` / `Ctrl+B` | Move cursor left |
+| Right | `→` / `Ctrl+F` | Move cursor right |
+| Line Start | `Home` / `Ctrl+A` | Go to beginning of line |
+| Line End | `End` / `Ctrl+E` | Go to end of line |
+| Word Left | `Ctrl+←` / `Alt+Space` | Move to previous word |
+| Word Right | `Ctrl+→` / `Ctrl+Space` | Move to next word |
+| Page Up | `PageUp` / `Ctrl+Y` | Scroll up one page |
+| Page Down | `PageDown` / `Ctrl+V` | Scroll down one page |
+| File Start | `Ctrl+Home` / `Alt+\` | Go to beginning of file |
+| File End | `Ctrl+End` / `Alt+/` | Go to end of file |
+| Go to Line | `Ctrl+_` / `Alt+G` | Jump to specific line |
+
+---
+
+## Search & Replace
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Search (Where Is) | `Ctrl+W` | Start search |
+| Search Next | `Alt+W` / `F3` | Find next match |
+| Search Prev | `Ctrl+Q` / `Shift+F3` | Find previous match |
+| Replace | `Ctrl+\` / `Alt+R` | Search and replace |
+
+---
+
+## Selection (Mark)
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Set Mark | `Alt+A` / `Ctrl+6` | Start/toggle selection |
 | Extend Up | `Shift+↑` | Select while moving up |
 | Extend Down | `Shift+↓` | Select while moving down |
 | Extend Left | `Shift+←` | Select while moving left |
@@ -139,87 +74,74 @@ In Overwrite mode (OVR), new characters replace existing characters.
 
 ---
 
-## Clipboard
+## Display
 
 | Action | Shortcut | Description |
 |--------|----------|-------------|
-| Copy | `Ctrl+C` | Copy selection to clipboard |
-| Cut | `Ctrl+X` | Cut selection (when selecting) |
-| Paste | `Ctrl+V` | Paste from clipboard |
-
-> **Note:** `Ctrl+X` exits the editor when nothing is selected, and cuts when there's a selection.
-
----
-
-## Search & Replace
-
-| Action | Shortcut |
-|--------|----------|
-| Search | `Ctrl+W` |
-| Find Next | `F3` |
-| Find Previous | `Shift+F3` |
-| Replace One | `Ctrl+R` |
-| Replace All | `Ctrl+Shift+R` |
-
-### In Search Mode
-
-| Action | Shortcut |
-|--------|----------|
-| Confirm | `Enter` |
-| Cancel | `Esc` |
-| Next Match | `F3` |
-| Previous Match | `Shift+F3` |
+| Cursor Position | `Ctrl+C` | Show current position info |
+| Toggle Line Numbers | `Alt+N` | Show/hide line numbers |
+| Toggle Help | `Ctrl+G` / `Alt+X` | Show/hide help bar |
+| Refresh Screen | `Ctrl+L` | Redraw screen |
+| Toggle Insert/Overwrite | `Insert` | Switch INS/OVR mode |
 
 ---
 
-## Mouse Support
+## Tab Management (Extension)
 
-| Action | Mouse |
-|--------|-------|
-| Position Cursor | Left Click |
-| Scroll Up | Scroll Wheel Up |
-| Scroll Down | Scroll Wheel Down |
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| New Tab | `Ctrl+T` | Create new empty tab |
+| Next Tab | `Ctrl+Tab` / `Ctrl+PageDown` | Switch to next tab |
+| Previous Tab | `Ctrl+Shift+Tab` / `Ctrl+PageUp` | Switch to previous tab |
+
+---
+
+## Split View (Extension)
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Horizontal Split | `Alt+\\` | Split side by side |
+| Vertical Split | `Alt+-` | Split top/bottom |
+| Close Split | `Alt+C` | Close current split |
+| Focus Left/Up | `Alt+Left` / `Alt+H` | Switch to left/top pane |
+| Focus Right/Down | `Alt+Right` / `Alt+L` | Switch to right/bottom pane |
+
+---
+
+## Macro Recording (Extension)
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Record Macro | `F4` | Start/stop recording |
+| Play Macro | `F5` | Play recorded macro |
 
 ---
 
 ## Mode-Specific Keys
 
-### Normal Mode
+### Save Confirmation (Ctrl+X with unsaved changes)
 
-Standard editing keybindings apply.
+| Key | Action |
+|-----|--------|
+| `Y` | Save and exit |
+| `N` | Exit without saving |
+| `C` / `Esc` | Cancel, return to editing |
 
-### Search Mode (`Ctrl+W`)
+### Search Mode (Ctrl+W)
 
 | Key | Action |
 |-----|--------|
 | `Enter` | Find and highlight matches |
 | `Esc` | Cancel search |
-| `F3` | Next match |
-| `Shift+F3` | Previous match |
+| `Alt+W` / `F3` | Next match |
+| `Ctrl+Q` / `Shift+F3` | Previous match |
 
-### Replace Mode (`Ctrl+R`)
-
-| Key | Action |
-|-----|--------|
-| `Enter` | Enter replacement text |
-| `Y` | Replace current match |
-| `N` | Skip to next match |
-| `Esc` | Cancel |
-
-### Go to Line Mode (`Ctrl+G`)
+### Go to Line Mode (Ctrl+_ / Alt+G)
 
 | Key | Action |
 |-----|--------|
 | `Enter` | Go to entered line number |
 | `Esc` | Cancel |
-
-### Quit Confirmation Mode
-
-| Key | Action |
-|-----|--------|
-| `Y` | Save and quit |
-| `N` | Quit without saving |
-| `Esc` | Cancel quit |
 
 ---
 
@@ -227,48 +149,46 @@ Standard editing keybindings apply.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    GESH QUICK REFERENCE                     │
+│                    GESH NANO-STYLE SHORTCUTS                │
 ├─────────────────────────────────────────────────────────────┤
-│  FILE        │  EDIT         │  NAVIGATE      │  SEARCH    │
-│  ^T New Tab  │  ^Z Undo      │  ^G Goto       │  ^W Find   │
-│  ^O Open     │  ^Y Redo      │  ^Home Start   │  F3 Next   │
-│  ^S Save     │  ^K Del Line  │  ^End End      │  ^R Replace│
-│  ^X Exit     │  ^U Cut Line  │  PgUp/Dn Page  │            │
+│  FILE         │  EDIT          │  SEARCH       │  NAV      │
+│  ^O Save      │  ^K Cut        │  ^W Search    │  ^Y PgUp  │
+│  ^R Read      │  ^U Paste      │  M-W Next     │  ^V PgDn  │
+│  ^X Exit      │  M-6 Copy      │  ^\ Replace   │  ^_ Goto  │
+│  ^G Help      │  M-U Undo      │  ^Q Prev      │  M-\ Top  │
+│               │  M-E Redo      │               │  M-/ End  │
 ├─────────────────────────────────────────────────────────────┤
-│  TABS               │  CLIPBOARD                            │
-│  ^Tab Next Tab      │  ^C Copy                              │
-│  ^Shift+Tab Prev    │  ^X Cut (with selection)              │
-│  Alt+1-9 Go to Tab  │  ^V Paste                             │
+│  MOVE         │  DELETE        │  DISPLAY      │  MARK     │
+│  ^P/^N Up/Dn  │  ^H Backspace  │  ^C Position  │  M-A Mark │
+│  ^B/^F Lt/Rt  │  ^D Delete     │  M-N LineNums │  ^6 Mark  │
+│  ^A/^E Home/E │  M-Bs Word←    │  ^L Refresh   │           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Nano Compatibility
+## Differences from GNU nano
 
-Gesh is designed to be familiar to nano users:
+While GESH aims for nano compatibility, there are some differences:
 
-| Nano | Gesh | Notes |
-|------|------|-------|
-| `^G` Help | `^G` Goto | Different function |
-| `^X` Exit | `^X` Exit/Cut | Same |
-| `^O` Write | `^S` Save | Different key |
-| `^R` Read | `^O` Open | Different key |
-| `^W` Search | `^W` Search | Same |
-| `^K` Cut | `^K` Delete Line | Similar |
-| `^U` Paste | `^U` Cut Line | Different |
-| `^C` Position | `^C` Copy | Different |
+| Feature | nano | GESH |
+|---------|------|------|
+| Spell Check | `Ctrl+T` | Not available (new tab instead) |
+| Justify | `Ctrl+J` | Not implemented |
+| Where Was (back search) | `Ctrl+Q` | Previous match |
+| Execute Command | `Ctrl+T` | New tab |
+| Browser | `Ctrl+B` | Move left |
 
 ---
 
 ## Tips
 
-1. **Double `Ctrl+A`**: First press goes to line start, second press selects all text.
+1. **Auto-indent**: When you press Enter, indentation from the current line is preserved.
 
-2. **`Ctrl+X` dual function**: Without selection it exits, with selection it cuts.
+2. **Scroll padding**: Cursor stays 5 lines away from edges when scrolling.
 
-3. **Auto-indent**: When you press Enter, indentation from the current line is preserved.
+3. **Mouse**: Click anywhere to position cursor, scroll wheel to navigate.
 
-4. **Scroll padding**: Cursor stays 5 lines away from edges when scrolling.
+4. **Syntax highlighting**: Automatic for 55+ languages based on file extension.
 
-5. **Mouse**: Click anywhere to position cursor, scroll wheel to navigate.
+5. **Themes**: Use `--theme` flag or config file to change colors (dark, light, monokai, dracula, gruvbox).
