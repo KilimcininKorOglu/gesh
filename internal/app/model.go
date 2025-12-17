@@ -46,6 +46,7 @@ type Model struct {
 
 	// Display options
 	showLineNumbers bool
+	wordWrap        bool
 
 	// Terminal dimensions
 	width  int
@@ -255,4 +256,14 @@ func (m *Model) SetShowLineNumbers(show bool) {
 // ToggleLineNumbers toggles line number display.
 func (m *Model) ToggleLineNumbers() {
 	m.showLineNumbers = !m.showLineNumbers
+}
+
+// SetWordWrap sets whether word wrap is enabled.
+func (m *Model) SetWordWrap(wrap bool) {
+	m.wordWrap = wrap
+}
+
+// ToggleWordWrap toggles word wrap.
+func (m *Model) ToggleWordWrap() {
+	m.wordWrap = !m.wordWrap
 }

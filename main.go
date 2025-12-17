@@ -143,6 +143,9 @@ func main() {
 		model.SetShowLineNumbers(cfg.Editor.LineNumbers)
 	}
 
+	// Apply word wrap setting from config
+	model.SetWordWrap(cfg.Editor.WordWrap)
+
 	// Go to specific line/column if specified
 	if startLine > 0 {
 		model.GotoLine(startLine, startCol)

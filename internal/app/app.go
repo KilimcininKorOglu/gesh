@@ -1215,6 +1215,15 @@ func isSpace(r rune) bool {
 	return r == ' ' || r == '\t' || r == '\n' || r == '\r'
 }
 
+// wrapLine wraps a line to fit within the given width.
+func wrapLine(line string, width int) string {
+	runes := []rune(line)
+	if len(runes) <= width {
+		return line
+	}
+	return string(runes[:width])
+}
+
 // getIndent extracts leading whitespace from a line.
 func getIndent(line string) string {
 	var indent strings.Builder
@@ -1537,9 +1546,23 @@ func (m *Model) renderEditor() string {
 			// Line content
 			lineContent := m.buffer.Line(lineNum)
 
+			// Calculate available width for text
+			textWidth := m.width
+			if m.showLineNumbers {
+				textWidth -= 7 // "→123 │ " = 7 chars
+			}
+			if textWidth < 10 {
+				textWidth = 10
+			}
+
+			// Word wrap if enabled
+			if m.wordWrap && len(lineContent) > textWidth {
+				lineContent = wrapLine(lineContent, textWidth)
+			}
+
 			// Calculate line start position in buffer
 			lineStart := m.buffer.LineStart(lineNum)
-			lineEnd := lineStart + len([]rune(lineContent))
+			lineEnd := lineStart + len([]rune(m.buffer.Line(lineNum)))
 
 			// Get selection bounds if selecting
 			selStart, selEnd := 0, 0
