@@ -196,6 +196,10 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.redo()
 		return m, nil
 
+	case "ctrl+k":
+		m.deleteLine()
+		return m, nil
+
 	default:
 		// Insert printable characters
 		if len(msg.Runes) > 0 {
@@ -357,6 +361,45 @@ func (m *Model) pageDown() {
 	if lineStart >= 0 {
 		m.buffer.MoveTo(lineStart)
 	}
+}
+
+// deleteLine deletes the current line.
+func (m *Model) deleteLine() {
+	currentLine := m.buffer.CurrentLine()
+	lineStart := m.buffer.LineStart(currentLine)
+	lineEnd := m.buffer.LineEnd(currentLine)
+
+	if lineStart < 0 || lineEnd < 0 {
+		return
+	}
+
+	// Include newline if not last line
+	deleteEnd := lineEnd
+	if currentLine < m.buffer.LineCount()-1 {
+		deleteEnd++ // Include newline
+	} else if lineStart > 0 {
+		// Last line: delete preceding newline instead
+		lineStart--
+	}
+
+	// Get deleted text for undo
+	deletedText := m.buffer.Slice(lineStart, deleteEnd)
+
+	// Delete the line
+	m.buffer.MoveTo(lineStart)
+	for i := lineStart; i < deleteEnd; i++ {
+		m.buffer.DeleteForward()
+	}
+
+	// Record for undo
+	m.history.Push(buffer.EditOperation{
+		Type:     buffer.OpDelete,
+		Position: lineStart,
+		Text:     deletedText,
+	})
+
+	m.modified = true
+	m.SetStatusMessage("Line deleted")
 }
 
 // saveFile saves the buffer to file.
