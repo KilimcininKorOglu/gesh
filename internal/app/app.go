@@ -1577,8 +1577,10 @@ func (m *Model) renderHeader() string {
 		filename += " *"
 	}
 
+	// Encoding and line ending info
+	rightInfo := fmt.Sprintf("%s %s", m.encoding, m.lineEnding)
+
 	// Calculate padding
-	rightInfo := "UTF-8 LF"
 	contentWidth := len(logo) + 3 + len(filename) + len(rightInfo)
 	padding := m.width - contentWidth
 	if padding < 0 {

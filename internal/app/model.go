@@ -39,10 +39,12 @@ type Model struct {
 	history *buffer.History
 
 	// File information
-	filename string
-	filepath string
-	modified bool
-	readonly bool
+	filename   string
+	filepath   string
+	modified   bool
+	readonly   bool
+	encoding   string
+	lineEnding string
 
 	// Display options
 	showLineNumbers    bool
@@ -101,6 +103,8 @@ func New() *Model {
 		buffer:             buffer.New(),
 		history:            buffer.NewHistory(),
 		filename:           "[New File]",
+		encoding:           "UTF-8",
+		lineEnding:         "LF",
 		mode:               ModeNormal,
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
@@ -113,6 +117,8 @@ func NewWithContent(content string) *Model {
 		buffer:             buffer.NewFromString(content),
 		history:            buffer.NewHistory(),
 		filename:           "[New File]",
+		encoding:           "UTF-8",
+		lineEnding:         "LF",
 		mode:               ModeNormal,
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
@@ -126,6 +132,23 @@ func NewFromFile(filepath, filename, content string) *Model {
 		history:            buffer.NewHistory(),
 		filename:           filename,
 		filepath:           filepath,
+		encoding:           "UTF-8",
+		lineEnding:         "LF",
+		mode:               ModeNormal,
+		showLineNumbers:    true,
+		syntaxHighlighting: true,
+	}
+}
+
+// NewFromFileWithInfo creates a new editor model with file metadata.
+func NewFromFileWithInfo(filepath, filename, content, encoding, lineEnding string) *Model {
+	return &Model{
+		buffer:             buffer.NewFromString(content),
+		history:            buffer.NewHistory(),
+		filename:           filename,
+		filepath:           filepath,
+		encoding:           encoding,
+		lineEnding:         lineEnding,
 		mode:               ModeNormal,
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
@@ -150,6 +173,26 @@ func (m *Model) IsModified() bool {
 // SetModified sets the modified flag.
 func (m *Model) SetModified(modified bool) {
 	m.modified = modified
+}
+
+// Encoding returns the file encoding.
+func (m *Model) Encoding() string {
+	return m.encoding
+}
+
+// SetEncoding sets the file encoding.
+func (m *Model) SetEncoding(encoding string) {
+	m.encoding = encoding
+}
+
+// LineEnding returns the line ending type.
+func (m *Model) LineEnding() string {
+	return m.lineEnding
+}
+
+// SetLineEnding sets the line ending type.
+func (m *Model) SetLineEnding(lineEnding string) {
+	m.lineEnding = lineEnding
 }
 
 // Mode returns the current editor mode.

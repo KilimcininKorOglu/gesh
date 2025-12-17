@@ -12,6 +12,7 @@ import (
 
 	"github.com/KilimcininKorOglu/gesh/internal/app"
 	"github.com/KilimcininKorOglu/gesh/internal/config"
+	"github.com/KilimcininKorOglu/gesh/internal/file"
 	"github.com/KilimcininKorOglu/gesh/pkg/version"
 )
 
@@ -115,7 +116,7 @@ func main() {
 	var model *app.Model
 
 	if filepath != "" {
-		content, err := os.ReadFile(filepath)
+		fileInfo, err := file.LoadWithInfo(filepath)
 		if err != nil {
 			if os.IsNotExist(err) {
 				// New file
@@ -128,7 +129,13 @@ func main() {
 				os.Exit(2) // Exit code 2: File not found / read error
 			}
 		} else {
-			model = app.NewFromFile(filepath, filepath, string(content))
+			model = app.NewFromFileWithInfo(
+				filepath,
+				filepath,
+				fileInfo.Content,
+				string(fileInfo.Encoding),
+				string(fileInfo.LineEnding),
+			)
 		}
 	} else {
 		// New empty file

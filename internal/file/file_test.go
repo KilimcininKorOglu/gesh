@@ -215,3 +215,134 @@ func TestLoadNonExistent(t *testing.T) {
 		t.Error("Load() should return error for non-existent file")
 	}
 }
+
+func TestLoadWithInfo(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "gesh-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	t.Run("UTF-8 with LF", func(t *testing.T) {
+		testPath := filepath.Join(tmpDir, "utf8_lf.txt")
+		content := "Hello\nWorld\n"
+		err := os.WriteFile(testPath, []byte(content), 0644)
+		if err != nil {
+			t.Fatalf("Failed to write test file: %v", err)
+		}
+
+		info, err := LoadWithInfo(testPath)
+		if err != nil {
+			t.Fatalf("LoadWithInfo() error: %v", err)
+		}
+
+		if info.Encoding != EncodingUTF8 {
+			t.Errorf("Encoding = %q, want %q", info.Encoding, EncodingUTF8)
+		}
+		if info.LineEnding != LineEndingLF {
+			t.Errorf("LineEnding = %q, want %q", info.LineEnding, LineEndingLF)
+		}
+		if info.HasBOM {
+			t.Error("HasBOM should be false")
+		}
+	})
+
+	t.Run("UTF-8 with CRLF", func(t *testing.T) {
+		testPath := filepath.Join(tmpDir, "utf8_crlf.txt")
+		content := "Hello\r\nWorld\r\n"
+		err := os.WriteFile(testPath, []byte(content), 0644)
+		if err != nil {
+			t.Fatalf("Failed to write test file: %v", err)
+		}
+
+		info, err := LoadWithInfo(testPath)
+		if err != nil {
+			t.Fatalf("LoadWithInfo() error: %v", err)
+		}
+
+		if info.Encoding != EncodingUTF8 {
+			t.Errorf("Encoding = %q, want %q", info.Encoding, EncodingUTF8)
+		}
+		if info.LineEnding != LineEndingCRLF {
+			t.Errorf("LineEnding = %q, want %q", info.LineEnding, LineEndingCRLF)
+		}
+		// Content should be normalized to LF
+		if info.Content != "Hello\nWorld\n" {
+			t.Errorf("Content = %q, want normalized LF", info.Content)
+		}
+	})
+
+	t.Run("UTF-8 with BOM", func(t *testing.T) {
+		testPath := filepath.Join(tmpDir, "utf8_bom.txt")
+		bom := []byte{0xEF, 0xBB, 0xBF}
+		content := append(bom, []byte("Hello\nWorld")...)
+		err := os.WriteFile(testPath, content, 0644)
+		if err != nil {
+			t.Fatalf("Failed to write test file: %v", err)
+		}
+
+		info, err := LoadWithInfo(testPath)
+		if err != nil {
+			t.Fatalf("LoadWithInfo() error: %v", err)
+		}
+
+		if info.Encoding != EncodingUTF8BOM {
+			t.Errorf("Encoding = %q, want %q", info.Encoding, EncodingUTF8BOM)
+		}
+		if info.HasBOM != true {
+			t.Error("HasBOM should be true")
+		}
+		// Content should not include BOM
+		if info.Content != "Hello\nWorld" {
+			t.Errorf("Content = %q, should not include BOM", info.Content)
+		}
+	})
+}
+
+func TestDetectLineEnding(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected LineEnding
+	}{
+		{"empty", "", LineEndingLF},
+		{"no newlines", "hello world", LineEndingLF},
+		{"LF only", "hello\nworld\n", LineEndingLF},
+		{"CRLF only", "hello\r\nworld\r\n", LineEndingCRLF},
+		{"mixed prefer CRLF", "hello\r\nworld\r\ntest\n", LineEndingCRLF},
+		{"mixed prefer LF", "hello\nworld\ntest\r\n", LineEndingLF},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := detectLineEnding([]byte(tt.content))
+			if got != tt.expected {
+				t.Errorf("detectLineEnding() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestConvertLineEndings(t *testing.T) {
+	tests := []struct {
+		name       string
+		content    string
+		lineEnding LineEnding
+		expected   string
+	}{
+		{"LF to LF", "hello\nworld", LineEndingLF, "hello\nworld"},
+		{"LF to CRLF", "hello\nworld", LineEndingCRLF, "hello\r\nworld"},
+		{"CRLF to LF", "hello\r\nworld", LineEndingLF, "hello\nworld"},
+		{"CRLF to CRLF", "hello\r\nworld", LineEndingCRLF, "hello\r\nworld"},
+		{"mixed to LF", "hello\r\nworld\n", LineEndingLF, "hello\nworld\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ConvertLineEndings(tt.content, tt.lineEnding)
+			if got != tt.expected {
+				t.Errorf("ConvertLineEndings() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
