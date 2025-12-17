@@ -1339,8 +1339,13 @@ func (m *Model) renderEditor() string {
 		lineNum := m.viewportTopLine + i
 
 		if lineNum < lineCount {
-			// Line number
-			lineNumStr := lineNumberStyle.Render(fmt.Sprintf("%d", lineNum+1))
+			// Line number with current line marker
+			var lineNumStr string
+			if lineNum == cursorLine {
+				lineNumStr = lineNumberStyle.Render(fmt.Sprintf("→%d", lineNum+1))
+			} else {
+				lineNumStr = lineNumberStyle.Render(fmt.Sprintf(" %d", lineNum+1))
+			}
 			b.WriteString(lineNumStr)
 			b.WriteString(" │ ")
 
