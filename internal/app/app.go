@@ -1139,6 +1139,74 @@ func getIndent(line string) string {
 	return indent.String()
 }
 
+// formatSize formats byte size to human readable string.
+func formatSize(bytes int) string {
+	if bytes < 1024 {
+		return fmt.Sprintf("%d B", bytes)
+	} else if bytes < 1024*1024 {
+		return fmt.Sprintf("%.1f KB", float64(bytes)/1024)
+	} else {
+		return fmt.Sprintf("%.1f MB", float64(bytes)/(1024*1024))
+	}
+}
+
+// detectLanguage detects programming language from filename.
+func detectLanguage(filename string) string {
+	// Extract extension
+	ext := ""
+	for i := len(filename) - 1; i >= 0; i-- {
+		if filename[i] == '.' {
+			ext = filename[i:]
+			break
+		}
+	}
+
+	switch ext {
+	case ".go":
+		return "Go"
+	case ".py":
+		return "Python"
+	case ".js":
+		return "JavaScript"
+	case ".ts":
+		return "TypeScript"
+	case ".json":
+		return "JSON"
+	case ".yaml", ".yml":
+		return "YAML"
+	case ".toml":
+		return "TOML"
+	case ".md":
+		return "Markdown"
+	case ".html", ".htm":
+		return "HTML"
+	case ".css":
+		return "CSS"
+	case ".c", ".h":
+		return "C"
+	case ".cpp", ".hpp", ".cc":
+		return "C++"
+	case ".rs":
+		return "Rust"
+	case ".java":
+		return "Java"
+	case ".rb":
+		return "Ruby"
+	case ".php":
+		return "PHP"
+	case ".sh", ".bash":
+		return "Shell"
+	case ".sql":
+		return "SQL"
+	case ".xml":
+		return "XML"
+	case ".txt":
+		return "Text"
+	default:
+		return ""
+	}
+}
+
 // toggleSelection toggles selection mode.
 func (m *Model) toggleSelection() {
 	if m.selecting {
@@ -1390,9 +1458,17 @@ func (m *Model) renderStatusBar() string {
 	col := m.buffer.CurrentColumn() + 1
 	posInfo := fmt.Sprintf(" Ln %d, Col %d", line, col)
 
-	// File info
+	// File info with size
 	lineCount := m.buffer.LineCount()
-	fileInfo := fmt.Sprintf(" │ %d lines", lineCount)
+	size := m.buffer.Len()
+	sizeStr := formatSize(size)
+	fileInfo := fmt.Sprintf(" │ %d lines │ %s", lineCount, sizeStr)
+
+	// Language detection
+	lang := detectLanguage(m.filename)
+	if lang != "" {
+		fileInfo += " │ " + lang
+	}
 
 	// Status message or mode indicator
 	var modeInfo string
