@@ -116,6 +116,12 @@ func main() {
 	var model *app.Model
 
 	if filepath != "" {
+		// Check if file is large
+		isLarge, fileSize, sizeErr := file.IsLargeFile(filepath)
+		if sizeErr == nil && isLarge {
+			fmt.Fprintf(os.Stderr, "Loading large file (%s)...\n", file.FileSizeString(fileSize))
+		}
+
 		fileInfo, err := file.LoadWithInfo(filepath)
 		if err != nil {
 			if os.IsNotExist(err) {
