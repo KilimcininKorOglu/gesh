@@ -103,10 +103,20 @@ func applyTheme(theme styles.Theme) {
 // autoSaveTickMsg is sent periodically to check for auto-save and file changes.
 type autoSaveTickMsg struct{}
 
+// scrollTickMsg is sent during smooth scroll animation.
+type scrollTickMsg struct{}
+
 // autoSaveTick returns a command that sends an autoSaveTickMsg after a delay.
 func autoSaveTick() tea.Cmd {
 	return tea.Tick(time.Second*5, func(t time.Time) tea.Msg {
 		return autoSaveTickMsg{}
+	})
+}
+
+// scrollTick returns a command for smooth scroll animation (16ms = ~60fps).
+func scrollTick() tea.Cmd {
+	return tea.Tick(time.Millisecond*16, func(t time.Time) tea.Msg {
+		return scrollTickMsg{}
 	})
 }
 
@@ -137,6 +147,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		// Continue ticking
 		return m, autoSaveTick()
+	case scrollTickMsg:
+		// Update smooth scroll animation
+		if m.UpdateSmoothScroll() {
+			// Continue animation
+			return m, scrollTick()
+		}
+		// Animation complete
+		return m, nil
 	}
 	return m, nil
 }
@@ -519,9 +537,13 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "pgup":
 		m.clearSelection()
 		m.pageUp()
+		// Start smooth scroll animation
+		return m, scrollTick()
 	case "pgdown":
 		m.clearSelection()
 		m.pageDown()
+		// Start smooth scroll animation
+		return m, scrollTick()
 
 	// Editing (check readonly)
 	case "backspace":
@@ -771,6 +793,13 @@ func (m *Model) pageUp() {
 	if lineStart >= 0 {
 		m.buffer.MoveTo(lineStart)
 	}
+
+	// Start smooth scroll
+	newTopLine := m.viewportTopLine - visibleLines
+	if newTopLine < 0 {
+		newTopLine = 0
+	}
+	m.StartSmoothScroll(newTopLine)
 }
 
 // pageDown moves the cursor down by a page.
@@ -791,6 +820,17 @@ func (m *Model) pageDown() {
 	if lineStart >= 0 {
 		m.buffer.MoveTo(lineStart)
 	}
+
+	// Start smooth scroll
+	maxTopLine := maxLine - visibleLines + 1
+	if maxTopLine < 0 {
+		maxTopLine = 0
+	}
+	newTopLine := m.viewportTopLine + visibleLines
+	if newTopLine > maxTopLine {
+		newTopLine = maxTopLine
+	}
+	m.StartSmoothScroll(newTopLine)
 }
 
 // deleteLine deletes the current line.

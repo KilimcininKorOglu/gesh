@@ -76,6 +76,10 @@ type Model struct {
 	viewportTopLine    int
 	viewportLeftColumn int
 
+	// Smooth scroll state
+	targetTopLine   int  // target line for smooth scroll
+	scrollAnimating bool // whether scroll animation is in progress
+
 	// Editor mode
 	mode Mode
 
@@ -665,6 +669,58 @@ func (m *Model) IsLineDirty(line int) bool {
 	_, dirty := m.dirtyLines[line]
 	_, cached := m.cachedLines[line]
 	return dirty || !cached
+}
+
+// StartSmoothScroll initiates smooth scrolling to a target line.
+func (m *Model) StartSmoothScroll(targetLine int) {
+	m.targetTopLine = targetLine
+	m.scrollAnimating = true
+}
+
+// UpdateSmoothScroll advances the smooth scroll animation.
+// Returns true if animation is still in progress.
+func (m *Model) UpdateSmoothScroll() bool {
+	if !m.scrollAnimating {
+		return false
+	}
+
+	// Calculate scroll step (ease-out effect)
+	diff := m.targetTopLine - m.viewportTopLine
+	if diff == 0 {
+		m.scrollAnimating = false
+		return false
+	}
+
+	// Move by a fraction of the remaining distance (smooth easing)
+	step := diff / 3
+	if step == 0 {
+		if diff > 0 {
+			step = 1
+		} else {
+			step = -1
+		}
+	}
+
+	m.viewportTopLine += step
+
+	// Check if we've reached the target
+	if m.viewportTopLine == m.targetTopLine {
+		m.scrollAnimating = false
+		return false
+	}
+
+	return true
+}
+
+// IsScrollAnimating returns true if smooth scroll is in progress.
+func (m *Model) IsScrollAnimating() bool {
+	return m.scrollAnimating
+}
+
+// StopSmoothScroll immediately stops the scroll animation.
+func (m *Model) StopSmoothScroll() {
+	m.scrollAnimating = false
+	m.viewportTopLine = m.targetTopLine
 }
 
 // IsSplit returns true if the view is split.
