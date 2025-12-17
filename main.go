@@ -11,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/KilimcininKorOglu/gesh/internal/app"
+	"github.com/KilimcininKorOglu/gesh/internal/config"
 	"github.com/KilimcininKorOglu/gesh/pkg/version"
 )
 
@@ -19,6 +20,7 @@ func main() {
 	var startLine, startCol int
 	var readonly bool
 	var themeName string
+	var noConfig bool
 
 	// Parse arguments
 	args := os.Args[1:]
@@ -51,6 +53,9 @@ func main() {
 		case strings.HasPrefix(arg, "--theme="):
 			themeName = strings.TrimPrefix(arg, "--theme=")
 
+		case arg == "-n" || arg == "--norc":
+			noConfig = true
+
 		case strings.HasPrefix(arg, "+"):
 			// Parse +N or +N:M
 			pos := arg[1:]
@@ -78,9 +83,24 @@ func main() {
 		}
 	}
 
-	// Apply theme if specified
+	// Load config unless --norc
+	var cfg *config.Config
+	if !noConfig {
+		var err error
+		cfg, err = config.Load()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
+			cfg = config.DefaultConfig()
+		}
+	} else {
+		cfg = config.DefaultConfig()
+	}
+
+	// Apply theme: CLI flag takes precedence over config
 	if themeName != "" {
 		app.SetTheme(themeName)
+	} else {
+		app.SetTheme(cfg.Theme)
 	}
 
 	// Create the model
@@ -136,6 +156,7 @@ func printHelp() {
 	fmt.Println("  -v, --version      Show version information")
 	fmt.Println("  -r, --readonly     Open file in read-only mode")
 	fmt.Println("  -t, --theme NAME   Set color theme (dark, light, monokai, dracula, gruvbox)")
+	fmt.Println("  -n, --norc         Do not load config file")
 	fmt.Println("  +N                 Open at line N")
 	fmt.Println("  +N:M               Open at line N, column M")
 	fmt.Println()
