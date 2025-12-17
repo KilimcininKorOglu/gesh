@@ -42,19 +42,19 @@ func TestNewFromString(t *testing.T) {
 			name:    "simple string",
 			input:   "Hello",
 			wantLen: 5 + defaultGapSize,
-			wantGap: 5,
+			wantGap: 0, // cursor at beginning
 		},
 		{
 			name:    "unicode string",
 			input:   "Merhaba dünya",
 			wantLen: 13 + defaultGapSize, // 13 runes
-			wantGap: 13,
+			wantGap: 0,                   // cursor at beginning
 		},
 		{
 			name:    "emoji string",
 			input:   "Hello 🌍",
 			wantLen: 7 + defaultGapSize, // 7 runes (emoji is 1 rune)
-			wantGap: 7,
+			wantGap: 0,                  // cursor at beginning
 		},
 	}
 
@@ -115,7 +115,7 @@ func TestInsertString(t *testing.T) {
 			name:        "insert empty string",
 			initial:     "Hello",
 			insert:      "",
-			wantGapStart: 5,
+			wantGapStart: 0, // cursor stays at beginning
 		},
 		{
 			name:        "insert unicode",
@@ -162,6 +162,8 @@ func TestInsertStringLarge(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	gb := NewFromString("Hello")
+	// cursor is at beginning, move to end first
+	gb.MoveToEnd()
 
 	// Delete from end (cursor is at position 5)
 	r := gb.Delete()
@@ -190,18 +192,18 @@ func TestDeleteFromEmpty(t *testing.T) {
 }
 
 func TestDeleteForward(t *testing.T) {
+	// Create buffer with "Hello", cursor at beginning
 	gb := NewFromString("Hello")
-	// Move cursor to beginning by creating fresh buffer with cursor at start
-	gb = New()
-	gb.InsertString("Hello")
-	// Now cursor is at end, we need to test DeleteForward
-	// For this test, let's create a buffer where cursor is NOT at the end
-
-	// Actually, let's create a proper test:
-	// Create buffer with "Hello", cursor at end (position 5)
-	// DeleteForward should return 0 (nothing after cursor)
-	gb = NewFromString("Hello")
+	
+	// DeleteForward should delete 'H'
 	r := gb.DeleteForward()
+	if r != 'H' {
+		t.Errorf("DeleteForward() at beginning = %c, want 'H'", r)
+	}
+
+	// Now test at end - move cursor to end
+	gb.MoveToEnd()
+	r = gb.DeleteForward()
 	if r != 0 {
 		t.Errorf("DeleteForward() at end = %c, want 0", r)
 	}
@@ -262,8 +264,10 @@ func TestCursorPos(t *testing.T) {
 
 func TestMoveLeft(t *testing.T) {
 	gb := NewFromString("Hello")
+	// cursor starts at beginning now, move to end first
+	gb.MoveToEnd()
 
-	// Cursor starts at end (position 5)
+	// Cursor should be at end (position 5)
 	if gb.CursorPos() != 5 {
 		t.Errorf("Initial CursorPos() = %d, want 5", gb.CursorPos())
 	}
@@ -479,6 +483,8 @@ func TestString(t *testing.T) {
 
 func TestStringAfterEdits(t *testing.T) {
 	gb := NewFromString("Hello")
+	// cursor is at beginning, move to end
+	gb.MoveToEnd()
 
 	// Delete last char
 	gb.Delete()

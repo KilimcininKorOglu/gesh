@@ -33,19 +33,20 @@ func New() *GapBuffer {
 }
 
 // NewFromString creates a GapBuffer initialized with the given string.
-// The cursor is positioned at the end of the text.
+// The cursor is positioned at the beginning of the text.
 func NewFromString(s string) *GapBuffer {
 	runes := []rune(s)
 	textLen := len(runes)
 	totalSize := textLen + defaultGapSize
 
 	data := make([]rune, totalSize)
-	copy(data, runes)
+	// Put gap at the beginning, text after
+	copy(data[defaultGapSize:], runes)
 
 	return &GapBuffer{
 		data:     data,
-		gapStart: textLen,
-		gapEnd:   totalSize,
+		gapStart: 0,
+		gapEnd:   defaultGapSize,
 	}
 }
 
