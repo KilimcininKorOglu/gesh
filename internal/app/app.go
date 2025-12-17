@@ -1053,12 +1053,14 @@ func (m *Model) View() string {
 // renderHeader renders the top header bar.
 func (m *Model) renderHeader() string {
 	// Logo
-	logo := " GESH "
+	logo := " 𒄑 GESH "
 
-	// Filename with modified indicator
+	// Filename with modified/readonly indicator
 	filename := m.filename
-	if m.modified {
-		filename += " [Modified]"
+	if m.readonly {
+		filename += " [RO]"
+	} else if m.modified {
+		filename += " *"
 	}
 
 	// Calculate padding
