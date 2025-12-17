@@ -167,52 +167,84 @@ func (m *Model) handleMouseMsg(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 
 	switch msg.Button {
 	case tea.MouseButtonLeft:
+		// User clicked - reset mouse scrolling mode
+		m.mouseScrolling = false
+
+		// Calculate which line was clicked (account for header)
+		clickedLine := m.viewportTopLine + msg.Y - 1 // -1 for header
+
+		// Check bounds
+		if clickedLine < 0 {
+			clickedLine = 0
+		}
+		if clickedLine >= m.buffer.LineCount() {
+			clickedLine = m.buffer.LineCount() - 1
+		}
+
+		// Calculate column (account for line numbers: "→123 │ " = ~7 chars)
+		lineNumWidth := 7
+		clickedCol := msg.X - lineNumWidth
+		if clickedCol < 0 {
+			clickedCol = 0
+		}
+
+		// Get line content and clamp column
+		lineContent := m.buffer.Line(clickedLine)
+		lineLen := len([]rune(lineContent))
+		if clickedCol > lineLen {
+			clickedCol = lineLen
+		}
+
+		// Calculate target position
+		lineStart := m.buffer.LineStart(clickedLine)
+		targetPos := lineStart + clickedCol
+
 		if msg.Action == tea.MouseActionPress {
-			// Calculate which line was clicked (account for header)
-			clickedLine := m.viewportTopLine + msg.Y - 1 // -1 for header
-
-			// Check bounds
-			if clickedLine < 0 {
-				clickedLine = 0
+			// Start selection on mouse down
+			m.buffer.MoveTo(targetPos)
+			m.selectionStart = targetPos
+			m.selectionEnd = targetPos
+			m.selecting = true
+		} else if msg.Action == tea.MouseActionMotion && m.selecting {
+			// Extend selection while dragging
+			m.buffer.MoveTo(targetPos)
+			m.selectionEnd = targetPos
+		} else if msg.Action == tea.MouseActionRelease {
+			// Finish selection on mouse up
+			m.buffer.MoveTo(targetPos)
+			m.selectionEnd = targetPos
+			// If start == end, cancel selection (just a click)
+			if m.selectionStart == m.selectionEnd {
+				m.selecting = false
 			}
-			if clickedLine >= m.buffer.LineCount() {
-				clickedLine = m.buffer.LineCount() - 1
-			}
+		}
 
-			// Calculate column (account for line numbers: "→123 │ " = ~7 chars)
-			lineNumWidth := 7
-			clickedCol := msg.X - lineNumWidth
-			if clickedCol < 0 {
-				clickedCol = 0
-			}
-
-			// Get line content and clamp column
-			lineContent := m.buffer.Line(clickedLine)
-			lineLen := len([]rune(lineContent))
-			if clickedCol > lineLen {
-				clickedCol = lineLen
-			}
-
-			// Move cursor
-			lineStart := m.buffer.LineStart(clickedLine)
-			m.buffer.MoveTo(lineStart + clickedCol)
-			m.clearSelection()
+	case tea.MouseButtonRight:
+		// Right click - copy if selecting, paste if not
+		if m.selecting && m.selectionStart != m.selectionEnd {
+			m.copySelection()
+		} else if !m.readonly {
+			m.paste()
 		}
 
 	case tea.MouseButtonWheelUp:
-		// Scroll up
+		// Scroll up - user controls viewport
+		m.mouseScrolling = true
 		m.viewportTopLine -= 3
 		if m.viewportTopLine < 0 {
 			m.viewportTopLine = 0
 		}
 
 	case tea.MouseButtonWheelDown:
-		// Scroll down
-		maxTop := m.buffer.LineCount() - (m.height - 3)
+		// Scroll down - user controls viewport
+		m.mouseScrolling = true
+		m.viewportTopLine += 3
+		// Max scroll = show at least 1 line at bottom
+		visibleLines := m.height - 4 // header, status, 2 help lines
+		maxTop := m.buffer.LineCount() - visibleLines
 		if maxTop < 0 {
 			maxTop = 0
 		}
-		m.viewportTopLine += 3
 		if m.viewportTopLine > maxTop {
 			m.viewportTopLine = maxTop
 		}
@@ -223,6 +255,9 @@ func (m *Model) handleMouseMsg(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 
 // handleKeyMsg processes keyboard input.
 func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Reset mouse scrolling mode on any key press
+	m.mouseScrolling = false
+
 	// Record key for macro (if recording)
 	if m.macro != nil {
 		m.macro.RecordKey(msg)
@@ -2419,24 +2454,27 @@ func (m *Model) renderEditor() string {
 	cursorCol := m.buffer.CurrentColumn()
 
 	// Adjust viewport to keep cursor visible with scroll padding
-	scrollPadding := 5
-	if scrollPadding >= visibleLines/2 {
-		scrollPadding = visibleLines / 3
-	}
+	// But NOT when user is scrolling with mouse - let them scroll freely
+	if !m.mouseScrolling {
+		scrollPadding := 5
+		if scrollPadding >= visibleLines/2 {
+			scrollPadding = visibleLines / 3
+		}
 
-	if cursorLine < m.viewportTopLine+scrollPadding {
-		m.viewportTopLine = cursorLine - scrollPadding
-		if m.viewportTopLine < 0 {
-			m.viewportTopLine = 0
+		if cursorLine < m.viewportTopLine+scrollPadding {
+			m.viewportTopLine = cursorLine - scrollPadding
+			if m.viewportTopLine < 0 {
+				m.viewportTopLine = 0
+			}
 		}
-	}
-	if cursorLine >= m.viewportTopLine+visibleLines-scrollPadding {
-		m.viewportTopLine = cursorLine - visibleLines + scrollPadding + 1
-		if m.viewportTopLine > lineCount-visibleLines {
-			m.viewportTopLine = lineCount - visibleLines
-		}
-		if m.viewportTopLine < 0 {
-			m.viewportTopLine = 0
+		if cursorLine >= m.viewportTopLine+visibleLines-scrollPadding {
+			m.viewportTopLine = cursorLine - visibleLines + scrollPadding + 1
+			if m.viewportTopLine > lineCount-visibleLines {
+				m.viewportTopLine = lineCount - visibleLines
+			}
+			if m.viewportTopLine < 0 {
+				m.viewportTopLine = 0
+			}
 		}
 	}
 

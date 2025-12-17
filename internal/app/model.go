@@ -84,6 +84,7 @@ type Model struct {
 	// Smooth scroll state
 	targetTopLine   int  // target line for smooth scroll
 	scrollAnimating bool // whether scroll animation is in progress
+	mouseScrolling  bool // true when user is scrolling with mouse (bypass cursor follow)
 
 	// Editor mode
 	mode Mode
