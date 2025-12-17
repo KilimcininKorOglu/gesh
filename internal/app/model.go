@@ -58,6 +58,9 @@ type Model struct {
 	syntaxHighlighting bool
 	showTabs           bool // show tab bar
 
+	// Edit mode
+	overwriteMode bool // false = insert, true = overwrite
+
 	// Save options
 	trimTrailingSpaces bool
 	finalNewline       bool
@@ -536,6 +539,26 @@ func (m *Model) SetShowTabs(show bool) {
 // ToggleShowTabs toggles the tab bar visibility.
 func (m *Model) ToggleShowTabs() {
 	m.showTabs = !m.showTabs
+}
+
+// IsOverwriteMode returns true if in overwrite mode.
+func (m *Model) IsOverwriteMode() bool {
+	return m.overwriteMode
+}
+
+// SetOverwriteMode sets the overwrite mode.
+func (m *Model) SetOverwriteMode(overwrite bool) {
+	m.overwriteMode = overwrite
+}
+
+// ToggleOverwriteMode toggles between insert and overwrite mode.
+func (m *Model) ToggleOverwriteMode() {
+	m.overwriteMode = !m.overwriteMode
+	if m.overwriteMode {
+		m.SetStatusMessage("Overwrite mode")
+	} else {
+		m.SetStatusMessage("Insert mode")
+	}
 }
 
 // IsSplit returns true if the view is split.

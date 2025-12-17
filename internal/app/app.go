@@ -581,6 +581,11 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.deleteLine()
 		return m, nil
 
+	case "insert":
+		// Toggle insert/overwrite mode
+		m.ToggleOverwriteMode()
+		return m, nil
+
 	default:
 		// Insert printable characters
 		if len(msg.Runes) > 0 {
@@ -590,9 +595,26 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			pos := m.buffer.CursorPos()
 			text := string(msg.Runes)
-			for _, r := range msg.Runes {
-				m.buffer.Insert(r)
+
+			if m.overwriteMode {
+				// Overwrite mode: replace characters
+				for _, r := range msg.Runes {
+					// Don't overwrite past end of line
+					if m.buffer.CursorPos() < m.buffer.Len() {
+						currentRune := m.buffer.RuneAt(m.buffer.CursorPos())
+						if currentRune != '\n' {
+							m.buffer.DeleteForward()
+						}
+					}
+					m.buffer.Insert(r)
+				}
+			} else {
+				// Insert mode: normal insert
+				for _, r := range msg.Runes {
+					m.buffer.Insert(r)
+				}
 			}
+
 			m.history.Push(buffer.EditOperation{
 				Type:     buffer.OpInsert,
 				Position: pos,
@@ -2073,6 +2095,9 @@ func (m *Model) renderStatusBar() string {
 
 	// Right-aligned mode
 	rightInfo := "INS "
+	if m.overwriteMode {
+		rightInfo = "OVR "
+	}
 	if m.macro != nil && m.macro.IsRecording() {
 		rightInfo = "REC "
 	}
