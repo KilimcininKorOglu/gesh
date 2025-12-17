@@ -220,7 +220,11 @@ func (m *Model) handleMouseMsg(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.MouseButtonRight:
-		// Right click - copy if selecting, paste if not
+		// Right click - only handle on press, not release
+		if msg.Action != tea.MouseActionPress {
+			return m, nil
+		}
+		// Copy if selection exists, paste if not
 		if m.selecting && m.selectionStart != m.selectionEnd {
 			m.copySelection()
 		} else if !m.readonly {

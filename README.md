@@ -1,196 +1,214 @@
-# Gesh (𒄑)
+<p align="center">
+  <h1 align="center">𒄑 GESH</h1>
+  <p align="center">
+    <strong>A nano-compatible terminal text editor written in Go</strong>
+  </p>
+  <p align="center">
+    <a href="#installation">Installation</a> •
+    <a href="#features">Features</a> •
+    <a href="#keyboard-shortcuts">Shortcuts</a> •
+    <a href="#configuration">Config</a> •
+    <a href="#documentation">Docs</a>
+  </p>
+</p>
 
-test deneme
+---
 
-A minimal, fast, nano-like TUI text editor written in Go with [Bubble Tea](https://github.com/charmbracelet/bubbletea).
+**Gesh** (𒄑) is the Sumerian cuneiform sign meaning "wood, tree" and by extension "pen, stylus, writing tool". In ancient Mesopotamia, scribes used reed styluses to write on clay tablets — the earliest form of text editing.
 
-> **Gesh** (𒄑) is the Sumerian cuneiform sign meaning "wood, tree" and by extension "pen, stylus, writing tool". In ancient Mesopotamia, scribes used reed styluses to write on clay tablets - the earliest form of text editing. This editor carries that legacy into the modern terminal.
+Gesh brings that legacy to your modern terminal with **nano-compatible keybindings**, making it instantly familiar while adding powerful features like syntax highlighting, multiple tabs, split views, and macros.
 
-## Features
+## Why Gesh?
 
-### Core
-
-| Feature        | Description                              |
-|----------------|------------------------------------------|
-| Fast startup   | < 50ms cold start                        |
-| Low memory     | < 10MB empty, < 15MB with 1MB file       |
-| Single binary  | No external dependencies                 |
-| Cross-platform | Linux, macOS, Windows                    |
-| Mouse support  | Click positioning, scroll wheel          |
-
-### Editing
-
-| Feature          | Description                              |
-|------------------|------------------------------------------|
-| Undo/Redo        | Operation merging for efficient history  |
-| Clipboard        | System clipboard integration             |
-| Search & Replace | Incremental search with highlighting     |
-| Selection        | Keyboard and shift+arrow selection       |
-| Insert/Overwrite | Toggle with Insert key                   |
-| Macros           | Record and playback keystrokes           |
-
-### User Interface
-
-| Feature             | Description                              |
-|---------------------|------------------------------------------|
-| Syntax highlighting | 55+ languages supported                  |
-| Color themes        | dark, light, monokai, dracula, gruvbox   |
-| Multi-tab           | Multiple files in tabs                   |
-| Split view          | Horizontal and vertical splits           |
-| Line numbers        | Toggleable with current line marker      |
-| Status bar          | Position, encoding, language, mode       |
-
-### File Operations
-
-| Feature       | Description                              |
-|---------------|------------------------------------------|
-| Auto-save     | Configurable interval                    |
-| Backup files  | Optional .bak creation                   |
-| File watcher  | External change detection                |
-| Encoding      | UTF-8, UTF-8 BOM, Latin-1                |
-| Line endings  | LF, CRLF, CR detection                   |
-| Save options  | Trim trailing spaces, final newline      |
-
-### Advanced
-
-| Feature       | Description                              |
-|---------------|------------------------------------------|
-| Smooth scroll | Animated page up/down                    |
-| Word wrap     | Soft line wrapping                       |
-| Configuration | YAML-based settings                      |
-| Large files   | Chunked loading for files >10MB          |
+- 🚀 **Fast** — Starts in <50ms, keystroke latency <10ms
+- 🪶 **Lightweight** — Single binary, ~3MB memory usage
+- 🎹 **Nano-compatible** — Same shortcuts you already know
+- 🎨 **Syntax highlighting** — 55+ languages out of the box
+- 📑 **Tabs & splits** — Edit multiple files efficiently
+- 🖱️ **Mouse support** — Click, scroll, drag to select
+- ⚙️ **Configurable** — YAML-based settings, 5 themes
 
 ---
 
 ## Installation
 
+### Pre-built Binaries
+
+Download from [Releases](https://github.com/KilimcininKorOglu/gesh/releases) for:
+- Linux (amd64, arm64)
+- macOS (amd64, arm64)
+- Windows (amd64)
+- FreeBSD (amd64)
+
 ### From Source
 
 ```bash
+# With Go installed
 go install github.com/KilimcininKorOglu/gesh@latest
-```
 
-### Build Locally
-
-```bash
+# Or build locally
 git clone https://github.com/KilimcininKorOglu/gesh.git
 cd gesh
 go build -o gesh .
 ```
 
----
-
-## Usage
+### Package Managers
 
 ```bash
-gesh                      # New empty file
-gesh filename.txt         # Open file
-gesh +42 main.go          # Open at line 42
-gesh +42:10 main.go       # Open at line 42, column 10
-gesh -r config.yaml       # Read-only mode
-gesh -t monokai main.go   # Use specific theme
-gesh --version            # Show version
-gesh --help               # Show help
+# Coming soon
+# brew install gesh
+# apt install gesh
+# scoop install gesh
 ```
+
+---
+
+## Quick Start
+
+```bash
+gesh                      # New file
+gesh README.md            # Open file
+gesh +100 main.go         # Open at line 100
+gesh -r config.yaml       # Read-only mode
+gesh --theme dracula      # With theme
+```
+
+---
+
+## Features
+
+### Core Editor
+| Feature | Description |
+|---------|-------------|
+| Gap Buffer | O(1) insertions at cursor position |
+| Undo/Redo | Intelligent operation merging |
+| Search & Replace | Incremental search with highlighting |
+| Selection | Keyboard, shift+arrows, or mouse drag |
+| Auto-indent | Preserves indentation on Enter |
+
+### Multi-File Editing
+| Feature | Description |
+|---------|-------------|
+| Tabs | `Ctrl+T` new, `Ctrl+Tab` switch |
+| Split View | Horizontal (`Alt+\\`) or vertical (`Alt+-`) |
+| File Watcher | Detects external changes |
+
+### Interface
+| Feature | Description |
+|---------|-------------|
+| Syntax Highlighting | 55+ languages |
+| Themes | dark, light, monokai, dracula, gruvbox |
+| Line Numbers | With current line marker |
+| Status Bar | Position, encoding, language |
+| Help Bar | Context-sensitive nano-style shortcuts |
+
+### Mouse Support
+| Action | Mouse |
+|--------|-------|
+| Position cursor | Left click |
+| Select text | Left click + drag |
+| Copy selection | Right click |
+| Paste | Right click (no selection) |
+| Scroll | Mouse wheel |
+
+### File Handling
+| Feature | Description |
+|---------|-------------|
+| Encodings | UTF-8, UTF-8 BOM, Latin-1 |
+| Line Endings | LF, CRLF, CR (auto-detect) |
+| Auto-save | Configurable interval |
+| Backup Files | Optional .bak creation |
+| Large Files | Chunked loading for >10MB |
 
 ---
 
 ## Keyboard Shortcuts
 
-### File Operations
+Gesh uses **nano-compatible** keybindings. If you know nano, you know Gesh.
 
-| Shortcut         | Action    |
-|------------------|-----------|
-| `Ctrl+S`         | Save      |
-| `Ctrl+Shift+S`   | Save as   |
-| `Ctrl+O`         | Open      |
-| `Ctrl+X`         | Exit      |
+### Essential
 
-### Navigation
-
-| Shortcut           | Action           |
-|--------------------|------------------|
-| `Arrow keys`       | Move cursor      |
-| `Ctrl+Left/Right`  | Move by word     |
-| `Home` / `End`     | Line start/end   |
-| `Ctrl+Home/End`    | File start/end   |
-| `PageUp/Down`      | Page navigation  |
-| `Ctrl+G`           | Go to line       |
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+X` | Exit |
+| `Ctrl+O` | Save (Write Out) |
+| `Ctrl+R` | Read/Insert file |
+| `Ctrl+G` | Help |
 
 ### Editing
 
-| Shortcut    | Action           |
-|-------------|------------------|
-| `Backspace` | Delete before    |
-| `Delete`    | Delete after     |
-| `Ctrl+K`    | Delete line      |
-| `Ctrl+U`    | Cut line         |
-| `Ctrl+V`    | Paste            |
-| `Ctrl+Z`    | Undo             |
-| `Ctrl+Y`    | Redo             |
-| `Insert`    | Toggle INS/OVR   |
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+K` | Cut line/selection |
+| `Ctrl+U` | Paste (Uncut) |
+| `Alt+6` | Copy line/selection |
+| `Alt+U` | Undo |
+| `Alt+E` | Redo |
+
+### Navigation
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Y` | Page Up |
+| `Ctrl+V` | Page Down |
+| `Ctrl+A` | Beginning of line |
+| `Ctrl+E` | End of line |
+| `Alt+\` | Beginning of file |
+| `Alt+/` | End of file |
+| `Ctrl+_` / `Alt+G` | Go to line |
+
+### Search
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+W` | Search (Where Is) |
+| `Alt+W` | Find next |
+| `Ctrl+Q` | Find previous |
+| `Ctrl+\` / `Alt+R` | Replace |
 
 ### Selection
 
-| Shortcut       | Action           |
-|----------------|------------------|
-| `Ctrl+Space`   | Toggle selection |
+| Shortcut | Action |
+|----------|--------|
+| `Alt+A` | Set mark (start selection) |
 | `Shift+Arrows` | Extend selection |
-| `Ctrl+A` (2x)  | Select all       |
-| `Ctrl+C`       | Copy             |
-| `Ctrl+X`       | Cut              |
 
-### Search & Replace
+### Display
 
-| Shortcut         | Action          |
-|------------------|-----------------|
-| `Ctrl+W`         | Search          |
-| `Ctrl+R`         | Replace         |
-| `Ctrl+Shift+R`   | Replace all     |
-| `F3`             | Next match      |
-| `Shift+F3`       | Previous match  |
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+C` | Show cursor position |
+| `Alt+N` | Toggle line numbers |
+| `Ctrl+L` | Refresh screen |
 
-### Tabs
+### Extensions (Beyond Nano)
 
-| Shortcut           | Action        |
-|--------------------|---------------|
-| `Ctrl+T`           | New tab       |
-| `Ctrl+W`           | Close tab     |
-| `Ctrl+Tab`         | Next tab      |
-| `Ctrl+Shift+Tab`   | Previous tab  |
-| `Alt+1-9`          | Go to tab N   |
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+T` | New tab |
+| `Ctrl+Tab` | Next tab |
+| `Alt+\\` | Horizontal split |
+| `Alt+-` | Vertical split |
+| `F4` | Record macro |
+| `F5` | Play macro |
 
-### Macros
-
-| Shortcut         | Action           |
-|------------------|------------------|
-| `Ctrl+M`         | Toggle recording |
-| `Ctrl+Shift+M`   | Play macro       |
-
-### Split View
-
-| Shortcut         | Action           |
-|------------------|------------------|
-| `Ctrl+\`         | Horizontal split |
-| `Ctrl+Shift+-`   | Vertical split   |
-| `Ctrl+Shift+\`   | Close split      |
-| `Alt+Left/H`     | Focus left pane  |
-| `Alt+Right/L`    | Focus right pane |
+> 📖 Full reference: [KEYBINDINGS.md](KEYBINDINGS.md)
 
 ---
 
 ## Themes
 
-Available: `dark`, `light`, `monokai`, `dracula`, `gruvbox`
-
 ```bash
-gesh -t monokai file.go
+gesh --theme monokai file.go
 ```
 
-Or in config:
-```yaml
-theme: dracula
-```
+| Theme | Description |
+|-------|-------------|
+| `dark` | Default dark theme |
+| `light` | Light background |
+| `monokai` | Classic Monokai |
+| `dracula` | Dracula colors |
+| `gruvbox` | Gruvbox palette |
 
 ---
 
@@ -200,8 +218,6 @@ theme: dracula
 - Linux/macOS: `~/.config/gesh/gesh.yaml`
 - Windows: `%APPDATA%\gesh\gesh.yaml`
 
-**Example:**
-
 ```yaml
 editor:
   tab_size: 4
@@ -209,98 +225,96 @@ editor:
   auto_indent: true
   word_wrap: false
   line_numbers: true
-  scroll_padding: 5
   trim_trailing_spaces: false
   final_newline: true
-  create_backup: false
-  auto_save_interval: 0
+  auto_save_interval: 0  # seconds, 0 = disabled
 
 theme: dark
 ```
 
----
-
-## Documentation
-
-| Document                             | Description            |
-|--------------------------------------|------------------------|
-| [INSTALL.md](INSTALL.md)             | Installation guide     |
-| [KEYBINDINGS.md](KEYBINDINGS.md)     | Full keyboard reference|
-| [CONFIG.md](CONFIG.md)               | Configuration options  |
-| [THEMES.md](THEMES.md)               | Theme customization    |
-| [CONTRIBUTING.md](CONTRIBUTING.md)   | Contribution guide     |
-| [ARCHITECTURE.md](ARCHITECTURE.md)   | Technical details      |
-
----
-
-## Architecture
-
-Gesh uses the Elm Architecture via Bubble Tea:
-
-```
-┌─────────────────────────────────────────────┐
-│ Header: Logo | Filename | Encoding          │
-├─────────────────────────────────────────────┤
-│ Editor: Line numbers | Content              │
-├─────────────────────────────────────────────┤
-│ Status: Position | Language | Mode          │
-├─────────────────────────────────────────────┤
-│ Help: Context-sensitive shortcuts           │
-└─────────────────────────────────────────────┘
-```
-
-**Core Components:**
-
-| Component          | Purpose                    |
-|--------------------|----------------------------|
-| Gap Buffer         | O(1) local text editing    |
-| History            | Undo/redo with merging     |
-| TabManager         | Multi-tab management       |
-| SplitManager       | Split view panes           |
-| MacroRecorder      | Keystroke recording        |
-| FileWatcher        | Change detection           |
-| Syntax Highlighter | Tokenization               |
+> ⚙️ Full options: [CONFIG.md](CONFIG.md)
 
 ---
 
 ## Performance
 
-| Metric             |   Target |   Actual |
-|--------------------|----------|----------|
-| Startup            |   < 50ms |    ~30ms |
-| Keystroke latency  |   < 16ms |    < 10ms|
-| Memory (empty)     |    < 5MB |     ~3MB |
-| Memory (1MB file)  |   < 15MB |    ~12MB |
-| Scroll             |    60fps |    60fps |
+| Metric | Target | Actual |
+|--------|--------|--------|
+| Startup | <50ms | ~30ms |
+| Keystroke latency | <16ms | <10ms |
+| Memory (empty) | <5MB | ~3MB |
+| Memory (1MB file) | <15MB | ~12MB |
 
 ---
 
-## Testing
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [INSTALL.md](INSTALL.md) | Installation guide |
+| [KEYBINDINGS.md](KEYBINDINGS.md) | Complete keyboard reference |
+| [CONFIG.md](CONFIG.md) | Configuration options |
+| [THEMES.md](THEMES.md) | Theme customization |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical internals |
+
+---
+
+## Building
 
 ```bash
-go test ./...           # Run all tests
-go test ./... -cover    # With coverage
-go test -bench=. ./...  # Benchmarks
+# Development build
+go build .
+
+# Run tests
+go test ./...
+
+# Cross-platform builds (Windows)
+.\build.bat all
+
+# Cross-platform builds (Linux/macOS)
+make all
 ```
 
-**Coverage:**
+---
 
-| Package | Coverage |
-|---------|----------|
-| buffer  |      94% |
-| file    |      93% |
-| version |     100% |
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+
+```bash
+# Fork and clone
+git clone https://github.com/YOUR_USERNAME/gesh.git
+
+# Create branch
+git checkout -b feature/amazing-feature
+
+# Make changes, test
+go test ./...
+
+# Commit and push
+git commit -m "feat: add amazing feature"
+git push origin feature/amazing-feature
+```
 
 ---
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## Credits
+## Acknowledgments
 
-- [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI framework
-- [Lipgloss](https://github.com/charmbracelet/lipgloss) - Terminal styling
-- [Cobra](https://github.com/spf13/cobra) - CLI framework
+Built with these excellent libraries:
+
+- [Bubble Tea](https://github.com/charmbracelet/bubbletea) — TUI framework
+- [Lipgloss](https://github.com/charmbracelet/lipgloss) — Terminal styling
+- [Cobra](https://github.com/spf13/cobra) — CLI framework
+
+---
+
+<p align="center">
+  <sub>Made with ♥ for the terminal</sub>
+</p>
