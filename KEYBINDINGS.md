@@ -5,10 +5,26 @@
 | Action | Shortcut | Description |
 |--------|----------|-------------|
 | New File | `Ctrl+Alt+N` | Create new empty buffer |
+| New Tab | `Ctrl+T` | Open new tab |
+| Close Tab | `Ctrl+W` | Close current tab (search if only one tab) |
 | Open File | `Ctrl+O` | Open file dialog |
 | Save | `Ctrl+S` | Save current file |
 | Save As | `Ctrl+Shift+S` | Save with new name |
 | Exit | `Ctrl+X` | Exit editor (or cut if selecting) |
+
+---
+
+## Tab Management
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| New Tab | `Ctrl+T` | Create new empty tab |
+| Close Tab | `Ctrl+W` | Close current tab |
+| Next Tab | `Ctrl+Tab` | Switch to next tab |
+| Next Tab | `Ctrl+PageDown` | Switch to next tab (alternate) |
+| Previous Tab | `Ctrl+Shift+Tab` | Switch to previous tab |
+| Previous Tab | `Ctrl+PageUp` | Switch to previous tab (alternate) |
+| Go to Tab 1-9 | `Alt+1` to `Alt+9` | Switch to specific tab |
 
 ---
 
@@ -175,15 +191,15 @@ Standard editing keybindings apply.
 │                    GESH QUICK REFERENCE                     │
 ├─────────────────────────────────────────────────────────────┤
 │  FILE        │  EDIT         │  NAVIGATE      │  SEARCH    │
-│  ^Alt+N New  │  ^Z Undo      │  ^G Goto       │  ^W Find   │
+│  ^T New Tab  │  ^Z Undo      │  ^G Goto       │  ^W Find   │
 │  ^O Open     │  ^Y Redo      │  ^Home Start   │  F3 Next   │
 │  ^S Save     │  ^K Del Line  │  ^End End      │  ^R Replace│
 │  ^X Exit     │  ^U Cut Line  │  PgUp/Dn Page  │            │
 ├─────────────────────────────────────────────────────────────┤
-│  SELECTION          │  CLIPBOARD                            │
-│  ^Space Toggle      │  ^C Copy                              │
-│  ^A ^A Select All   │  ^X Cut (with selection)              │
-│  Shift+Arrows       │  ^V Paste                             │
+│  TABS               │  CLIPBOARD                            │
+│  ^Tab Next Tab      │  ^C Copy                              │
+│  ^Shift+Tab Prev    │  ^X Cut (with selection)              │
+│  Alt+1-9 Go to Tab  │  ^V Paste                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
