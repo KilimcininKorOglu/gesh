@@ -94,6 +94,9 @@ type Model struct {
 	// Replace state
 	replaceText string
 
+	// Macro recorder
+	macro *MacroRecorder
+
 	// Status message
 	statusMessage string
 
@@ -116,6 +119,7 @@ func New() *Model {
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
 		showTabs:           true,
+		macro:              NewMacroRecorder(),
 	}
 }
 
@@ -135,13 +139,14 @@ func NewWithContent(content string) *Model {
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
 		showTabs:           true,
+		macro:              NewMacroRecorder(),
 	}
 }
 
 // NewFromFile creates a new editor model for a specific file.
 func NewFromFile(filepath, filename, content string) *Model {
 	tabs := &TabManager{
-		tabs: []*Tab{NewTabFromFile(filepath, filename, content, "UTF-8", "LF")},
+		tabs:        []*Tab{NewTabFromFile(filepath, filename, content, "UTF-8", "LF")},
 		activeIndex: 0,
 	}
 	tab := tabs.ActiveTab()
@@ -157,13 +162,14 @@ func NewFromFile(filepath, filename, content string) *Model {
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
 		showTabs:           true,
+		macro:              NewMacroRecorder(),
 	}
 }
 
 // NewFromFileWithInfo creates a new editor model with file metadata.
 func NewFromFileWithInfo(filepath, filename, content, encoding, lineEnding string) *Model {
 	tabs := &TabManager{
-		tabs: []*Tab{NewTabFromFile(filepath, filename, content, encoding, lineEnding)},
+		tabs:        []*Tab{NewTabFromFile(filepath, filename, content, encoding, lineEnding)},
 		activeIndex: 0,
 	}
 	tab := tabs.ActiveTab()
@@ -179,6 +185,7 @@ func NewFromFileWithInfo(filepath, filename, content, encoding, lineEnding strin
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
 		showTabs:           true,
+		macro:              NewMacroRecorder(),
 	}
 }
 

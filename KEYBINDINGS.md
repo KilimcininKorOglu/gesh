@@ -28,6 +28,17 @@
 
 ---
 
+## Macro Recording
+
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Toggle Recording | `Ctrl+M` | Start/stop recording macro |
+| Play Macro | `Ctrl+Shift+M` | Play recorded macro |
+
+When recording, "REC" is shown in the status bar instead of "INS".
+
+---
+
 ## Navigation
 
 ### Basic Movement

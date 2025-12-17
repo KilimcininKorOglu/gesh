@@ -183,6 +183,11 @@ func (m *Model) handleMouseMsg(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 
 // handleKeyMsg processes keyboard input.
 func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Record key for macro (if recording)
+	if m.macro != nil {
+		m.macro.RecordKey(msg)
+	}
+
 	// Handle quit confirmation mode
 	if m.mode == ModeQuit {
 		switch msg.String() {
@@ -317,6 +322,27 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.SelectTab(tabNum)
 		}
 		return m, nil
+
+	case "ctrl+m":
+		// Toggle macro recording
+		if m.macro.ToggleRecording() {
+			m.SetStatusMessage("Recording macro...")
+		} else {
+			m.SetStatusMessage(fmt.Sprintf("Macro recorded (%d keys)", m.macro.KeyCount()))
+		}
+		return m, nil
+
+	case "ctrl+shift+m":
+		// Play macro
+		if m.macro.IsRecording() {
+			m.SetStatusMessage("Stop recording first (Ctrl+M)")
+			return m, nil
+		}
+		if m.macro.KeyCount() == 0 {
+			m.SetStatusMessage("No macro recorded")
+			return m, nil
+		}
+		return m.playMacro()
 
 	case "ctrl+s":
 		return m.saveFile()
@@ -730,6 +756,29 @@ func (m *Model) deleteLine() {
 
 	m.modified = true
 	m.SetStatusMessage("Line deleted")
+}
+
+// playMacro plays back the recorded macro.
+func (m *Model) playMacro() (tea.Model, tea.Cmd) {
+	if !m.macro.Play() {
+		m.SetStatusMessage("No macro to play")
+		return m, nil
+	}
+
+	// Play all keys in sequence
+	keysPlayed := 0
+	for {
+		key := m.macro.NextKey()
+		if key == nil {
+			break
+		}
+		// Recursively handle each key (without recording)
+		m.handleKeyMsg(*key)
+		keysPlayed++
+	}
+
+	m.SetStatusMessage(fmt.Sprintf("Macro played (%d keys)", keysPlayed))
+	return m, nil
 }
 
 // saveFile saves the buffer to file.
@@ -1844,6 +1893,9 @@ func (m *Model) renderStatusBar() string {
 
 	// Right-aligned mode
 	rightInfo := "INS "
+	if m.macro != nil && m.macro.IsRecording() {
+		rightInfo = "REC "
+	}
 
 	// Calculate content
 	leftContent := posInfo + fileInfo + modeInfo
