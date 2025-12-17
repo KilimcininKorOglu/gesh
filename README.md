@@ -8,55 +8,55 @@ A minimal, fast, nano-like TUI text editor written in Go with [Bubble Tea](https
 
 ### Core
 
-| Feature | Description |
-|---------|-------------|
-| Fast startup | < 50ms cold start |
-| Low memory | < 10MB empty, < 15MB with 1MB file |
-| Single binary | No external dependencies |
-| Cross-platform | Linux, macOS, Windows |
-| Mouse support | Click positioning, scroll wheel |
+| Feature        | Description                              |
+|----------------|------------------------------------------|
+| Fast startup   | < 50ms cold start                        |
+| Low memory     | < 10MB empty, < 15MB with 1MB file       |
+| Single binary  | No external dependencies                 |
+| Cross-platform | Linux, macOS, Windows                    |
+| Mouse support  | Click positioning, scroll wheel          |
 
 ### Editing
 
-| Feature | Description |
-|---------|-------------|
-| Undo/Redo | Operation merging for efficient history |
-| Clipboard | System clipboard integration |
-| Search & Replace | Incremental search with highlighting |
-| Selection | Keyboard and shift+arrow selection |
-| Insert/Overwrite | Toggle with Insert key |
-| Macros | Record and playback keystrokes |
+| Feature          | Description                              |
+|------------------|------------------------------------------|
+| Undo/Redo        | Operation merging for efficient history  |
+| Clipboard        | System clipboard integration             |
+| Search & Replace | Incremental search with highlighting     |
+| Selection        | Keyboard and shift+arrow selection       |
+| Insert/Overwrite | Toggle with Insert key                   |
+| Macros           | Record and playback keystrokes           |
 
 ### User Interface
 
-| Feature | Description |
-|---------|-------------|
-| Syntax highlighting | 55+ languages supported |
-| Color themes | dark, light, monokai, dracula, gruvbox |
-| Multi-tab | Multiple files in tabs |
-| Split view | Horizontal and vertical splits |
-| Line numbers | Toggleable with current line marker |
-| Status bar | Position, encoding, language, mode |
+| Feature             | Description                              |
+|---------------------|------------------------------------------|
+| Syntax highlighting | 55+ languages supported                  |
+| Color themes        | dark, light, monokai, dracula, gruvbox   |
+| Multi-tab           | Multiple files in tabs                   |
+| Split view          | Horizontal and vertical splits           |
+| Line numbers        | Toggleable with current line marker      |
+| Status bar          | Position, encoding, language, mode       |
 
 ### File Operations
 
-| Feature | Description |
-|---------|-------------|
-| Auto-save | Configurable interval |
-| Backup files | Optional .bak creation |
-| File watcher | External change detection |
-| Encoding | UTF-8, UTF-8 BOM, Latin-1 |
-| Line endings | LF, CRLF, CR detection |
-| Save options | Trim trailing spaces, final newline |
+| Feature       | Description                              |
+|---------------|------------------------------------------|
+| Auto-save     | Configurable interval                    |
+| Backup files  | Optional .bak creation                   |
+| File watcher  | External change detection                |
+| Encoding      | UTF-8, UTF-8 BOM, Latin-1                |
+| Line endings  | LF, CRLF, CR detection                   |
+| Save options  | Trim trailing spaces, final newline      |
 
 ### Advanced
 
-| Feature | Description |
-|---------|-------------|
-| Smooth scroll | Animated page up/down |
-| Word wrap | Soft line wrapping |
-| Configuration | YAML-based settings |
-| Large files | Chunked loading for files >10MB |
+| Feature       | Description                              |
+|---------------|------------------------------------------|
+| Smooth scroll | Animated page up/down                    |
+| Word wrap     | Soft line wrapping                       |
+| Configuration | YAML-based settings                      |
+| Large files   | Chunked loading for files >10MB          |
 
 ---
 
@@ -97,83 +97,83 @@ gesh --help               # Show help
 
 ### File Operations
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Ctrl+S` | Save |
-| `Ctrl+Shift+S` | Save as |
-| `Ctrl+O` | Open |
-| `Ctrl+X` | Exit |
+| Shortcut         | Action    |
+|------------------|-----------|
+| `Ctrl+S`         | Save      |
+| `Ctrl+Shift+S`   | Save as   |
+| `Ctrl+O`         | Open      |
+| `Ctrl+X`         | Exit      |
 
 ### Navigation
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Arrow keys` | Move cursor |
-| `Ctrl+Left/Right` | Move by word |
-| `Home` / `End` | Line start/end |
-| `Ctrl+Home/End` | File start/end |
-| `PageUp/Down` | Page navigation |
-| `Ctrl+G` | Go to line |
+| Shortcut           | Action           |
+|--------------------|------------------|
+| `Arrow keys`       | Move cursor      |
+| `Ctrl+Left/Right`  | Move by word     |
+| `Home` / `End`     | Line start/end   |
+| `Ctrl+Home/End`    | File start/end   |
+| `PageUp/Down`      | Page navigation  |
+| `Ctrl+G`           | Go to line       |
 
 ### Editing
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Backspace` | Delete before |
-| `Delete` | Delete after |
-| `Ctrl+K` | Delete line |
-| `Ctrl+U` | Cut line |
-| `Ctrl+V` | Paste |
-| `Ctrl+Z` | Undo |
-| `Ctrl+Y` | Redo |
-| `Insert` | Toggle INS/OVR |
+| Shortcut    | Action           |
+|-------------|------------------|
+| `Backspace` | Delete before    |
+| `Delete`    | Delete after     |
+| `Ctrl+K`    | Delete line      |
+| `Ctrl+U`    | Cut line         |
+| `Ctrl+V`    | Paste            |
+| `Ctrl+Z`    | Undo             |
+| `Ctrl+Y`    | Redo             |
+| `Insert`    | Toggle INS/OVR   |
 
 ### Selection
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Ctrl+Space` | Toggle selection |
+| Shortcut       | Action           |
+|----------------|------------------|
+| `Ctrl+Space`   | Toggle selection |
 | `Shift+Arrows` | Extend selection |
-| `Ctrl+A` (2x) | Select all |
-| `Ctrl+C` | Copy |
-| `Ctrl+X` | Cut |
+| `Ctrl+A` (2x)  | Select all       |
+| `Ctrl+C`       | Copy             |
+| `Ctrl+X`       | Cut              |
 
 ### Search & Replace
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Ctrl+W` | Search |
-| `Ctrl+R` | Replace |
-| `Ctrl+Shift+R` | Replace all |
-| `F3` | Next match |
-| `Shift+F3` | Previous match |
+| Shortcut         | Action          |
+|------------------|-----------------|
+| `Ctrl+W`         | Search          |
+| `Ctrl+R`         | Replace         |
+| `Ctrl+Shift+R`   | Replace all     |
+| `F3`             | Next match      |
+| `Shift+F3`       | Previous match  |
 
 ### Tabs
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Ctrl+T` | New tab |
-| `Ctrl+W` | Close tab |
-| `Ctrl+Tab` | Next tab |
-| `Ctrl+Shift+Tab` | Previous tab |
-| `Alt+1-9` | Go to tab N |
+| Shortcut           | Action        |
+|--------------------|---------------|
+| `Ctrl+T`           | New tab       |
+| `Ctrl+W`           | Close tab     |
+| `Ctrl+Tab`         | Next tab      |
+| `Ctrl+Shift+Tab`   | Previous tab  |
+| `Alt+1-9`          | Go to tab N   |
 
 ### Macros
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Ctrl+M` | Toggle recording |
-| `Ctrl+Shift+M` | Play macro |
+| Shortcut         | Action           |
+|------------------|------------------|
+| `Ctrl+M`         | Toggle recording |
+| `Ctrl+Shift+M`   | Play macro       |
 
 ### Split View
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Ctrl+\` | Horizontal split |
-| `Ctrl+Shift+-` | Vertical split |
-| `Ctrl+Shift+\` | Close split |
-| `Alt+Left/H` | Focus left pane |
-| `Alt+Right/L` | Focus right pane |
+| Shortcut         | Action           |
+|------------------|------------------|
+| `Ctrl+\`         | Horizontal split |
+| `Ctrl+Shift+-`   | Vertical split   |
+| `Ctrl+Shift+\`   | Close split      |
+| `Alt+Left/H`     | Focus left pane  |
+| `Alt+Right/L`    | Focus right pane |
 
 ---
 
@@ -220,14 +220,14 @@ theme: dark
 
 ## Documentation
 
-| Document | Description |
-|:---------|:------------|
-| [INSTALL.md](INSTALL.md) | Installation guide |
-| [KEYBINDINGS.md](KEYBINDINGS.md) | Full keyboard reference |
-| [CONFIG.md](CONFIG.md) | Configuration options |
-| [THEMES.md](THEMES.md) | Theme customization |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guide |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical details |
+| Document                             | Description            |
+|--------------------------------------|------------------------|
+| [INSTALL.md](INSTALL.md)             | Installation guide     |
+| [KEYBINDINGS.md](KEYBINDINGS.md)     | Full keyboard reference|
+| [CONFIG.md](CONFIG.md)               | Configuration options  |
+| [THEMES.md](THEMES.md)               | Theme customization    |
+| [CONTRIBUTING.md](CONTRIBUTING.md)   | Contribution guide     |
+| [ARCHITECTURE.md](ARCHITECTURE.md)   | Technical details      |
 
 ---
 
@@ -249,27 +249,27 @@ Gesh uses the Elm Architecture via Bubble Tea:
 
 **Core Components:**
 
-| Component | Purpose |
-|:----------|:--------|
-| Gap Buffer | O(1) local text editing |
-| History | Undo/redo with merging |
-| TabManager | Multi-tab management |
-| SplitManager | Split view panes |
-| MacroRecorder | Keystroke recording |
-| FileWatcher | Change detection |
-| Syntax Highlighter | Tokenization |
+| Component          | Purpose                    |
+|--------------------|----------------------------|
+| Gap Buffer         | O(1) local text editing    |
+| History            | Undo/redo with merging     |
+| TabManager         | Multi-tab management       |
+| SplitManager       | Split view panes           |
+| MacroRecorder      | Keystroke recording        |
+| FileWatcher        | Change detection           |
+| Syntax Highlighter | Tokenization               |
 
 ---
 
 ## Performance
 
-| Metric | Target | Actual |
-|:-------|-------:|-------:|
-| Startup | < 50ms | ~30ms |
-| Keystroke latency | < 16ms | < 10ms |
-| Memory (empty) | < 5MB | ~3MB |
-| Memory (1MB file) | < 15MB | ~12MB |
-| Scroll | 60fps | 60fps |
+| Metric             |   Target |   Actual |
+|--------------------|----------|----------|
+| Startup            |   < 50ms |    ~30ms |
+| Keystroke latency  |   < 16ms |    < 10ms|
+| Memory (empty)     |    < 5MB |     ~3MB |
+| Memory (1MB file)  |   < 15MB |    ~12MB |
+| Scroll             |    60fps |    60fps |
 
 ---
 
@@ -284,10 +284,10 @@ go test -bench=. ./...  # Benchmarks
 **Coverage:**
 
 | Package | Coverage |
-|:--------|---------:|
-| buffer | 94% |
-| file | 93% |
-| version | 100% |
+|---------|----------|
+| buffer  |      94% |
+| file    |      93% |
+| version |     100% |
 
 ---
 
