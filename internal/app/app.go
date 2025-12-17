@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -99,7 +100,7 @@ func applyTheme(theme styles.Theme) {
 	styles.UpdateTabStyles(theme)
 }
 
-// autoSaveTickMsg is sent periodically to check for auto-save.
+// autoSaveTickMsg is sent periodically to check for auto-save and file changes.
 type autoSaveTickMsg struct{}
 
 // autoSaveTick returns a command that sends an autoSaveTickMsg after a delay.
@@ -111,11 +112,8 @@ func autoSaveTick() tea.Cmd {
 
 // Init initializes the model.
 func (m *Model) Init() tea.Cmd {
-	// Start auto-save ticker if enabled
-	if m.autoSaveInterval > 0 {
-		return autoSaveTick()
-	}
-	return nil
+	// Always start ticker for file watching
+	return autoSaveTick()
 }
 
 // Update handles messages and updates the model.
@@ -132,6 +130,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Check if auto-save should trigger
 		if m.ShouldAutoSave() {
 			m.autoSave()
+		}
+		// Check for external file changes
+		if m.filepath != "" && !m.fileChanged {
+			m.checkFileChanged()
 		}
 		// Continue ticking
 		return m, autoSaveTick()
@@ -830,6 +832,25 @@ func (m *Model) deleteLine() {
 	m.SetStatusMessage("Line deleted")
 }
 
+// checkFileChanged checks if the file was modified externally.
+func (m *Model) checkFileChanged() {
+	if m.filepath == "" {
+		return
+	}
+
+	info, err := os.Stat(m.filepath)
+	if err != nil {
+		return
+	}
+
+	// Compare modification time (simple check)
+	modTime := info.ModTime().Unix()
+	if modTime > m.lastSaveTime && m.lastSaveTime > 0 {
+		m.fileChanged = true
+		m.SetStatusMessage("⚠ File changed externally! Press Ctrl+O to reload")
+	}
+}
+
 // autoSave performs an automatic save.
 func (m *Model) autoSave() {
 	if m.filepath == "" || !m.modified || m.readonly {
@@ -1306,6 +1327,8 @@ func (m *Model) handleOpenInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.history = buffer.NewHistory()
 				m.SetFilepath(m.inputBuffer)
 				m.modified = false
+				m.fileChanged = false // Reset external change flag
+				m.UpdateLastSaveTime()
 				m.SetStatusMessage("Opened: " + m.filename)
 			}
 		}

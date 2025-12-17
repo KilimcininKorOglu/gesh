@@ -136,6 +136,8 @@ func main() {
 				string(fileInfo.Encoding),
 				string(fileInfo.LineEnding),
 			)
+			// Initialize last save time for file watcher
+			model.UpdateLastSaveTime()
 		}
 	} else {
 		// New empty file

@@ -109,6 +109,9 @@ type Model struct {
 	autoSaveInterval int // seconds, 0 = disabled
 	lastSaveTime     int64
 
+	// File watcher
+	fileChanged bool // external change detected
+
 	// Status message
 	statusMessage string
 
@@ -589,6 +592,16 @@ func (m *Model) ShouldAutoSave() bool {
 // UpdateLastSaveTime updates the last save timestamp.
 func (m *Model) UpdateLastSaveTime() {
 	m.lastSaveTime = time.Now().Unix()
+}
+
+// SetFileChanged sets the file changed flag.
+func (m *Model) SetFileChanged(changed bool) {
+	m.fileChanged = changed
+}
+
+// IsFileChanged returns true if file was changed externally.
+func (m *Model) IsFileChanged() bool {
+	return m.fileChanged
 }
 
 // IsSplit returns true if the view is split.
