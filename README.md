@@ -101,8 +101,8 @@ gesh --help
 | Shortcut | Action |
 |----------|--------|
 | `Ctrl+W` | Search |
-| `Ctrl+R` | Find and replace all |
-| `Ctrl+Shift+R` | Find and replace all |
+| `Ctrl+R` | Replace (one at a time) |
+| `Ctrl+Shift+R` | Replace all |
 | `F3` | Next match |
 | `Shift+F3` | Previous match |
 
