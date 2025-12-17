@@ -106,6 +106,12 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// Normal mode key handling
 	switch msg.String() {
 	case "ctrl+x":
+		// If selecting, cut selection
+		if m.selecting {
+			m.cutSelection()
+			return m, nil
+		}
+		// Otherwise exit
 		if m.modified {
 			m.mode = ModeQuit
 			m.SetStatusMessage("Save changes? (Y)es, (N)o, (Esc)Cancel")
@@ -1019,7 +1025,42 @@ func (m *Model) copySelection() {
 		return
 	}
 	m.clipboard = m.buffer.Slice(start, end)
+	m.clearSelection()
 	m.SetStatusMessage("Copied to clipboard")
+}
+
+// cutSelection cuts selected text to clipboard.
+func (m *Model) cutSelection() {
+	if !m.selecting || m.readonly {
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+		}
+		return
+	}
+	start, end := m.getSelectionBounds()
+	if start == end {
+		return
+	}
+
+	// Copy to clipboard
+	m.clipboard = m.buffer.Slice(start, end)
+
+	// Delete selection
+	m.buffer.MoveTo(end)
+	for i := start; i < end; i++ {
+		m.buffer.Delete()
+	}
+
+	// Record for undo
+	m.history.Push(buffer.EditOperation{
+		Type:     buffer.OpDelete,
+		Position: start,
+		Text:     m.clipboard,
+	})
+
+	m.clearSelection()
+	m.modified = true
+	m.SetStatusMessage("Cut to clipboard")
 }
 
 // View renders the UI.
