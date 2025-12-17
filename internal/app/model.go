@@ -45,9 +45,14 @@ type Model struct {
 	readonly bool
 
 	// Display options
-	showLineNumbers   bool
-	wordWrap          bool
+	showLineNumbers    bool
+	wordWrap           bool
 	syntaxHighlighting bool
+
+	// Save options
+	trimTrailingSpaces bool
+	finalNewline       bool
+	createBackup       bool
 
 	// Terminal dimensions
 	width  int
@@ -280,4 +285,19 @@ func (m *Model) SetSyntaxHighlighting(enabled bool) {
 // ToggleSyntaxHighlighting toggles syntax highlighting.
 func (m *Model) ToggleSyntaxHighlighting() {
 	m.syntaxHighlighting = !m.syntaxHighlighting
+}
+
+// SetTrimTrailingSpaces sets whether to trim trailing whitespace on save.
+func (m *Model) SetTrimTrailingSpaces(trim bool) {
+	m.trimTrailingSpaces = trim
+}
+
+// SetFinalNewline sets whether to ensure file ends with newline.
+func (m *Model) SetFinalNewline(add bool) {
+	m.finalNewline = add
+}
+
+// SetCreateBackup sets whether to create backup files on save.
+func (m *Model) SetCreateBackup(backup bool) {
+	m.createBackup = backup
 }

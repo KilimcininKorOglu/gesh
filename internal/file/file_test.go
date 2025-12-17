@@ -17,7 +17,7 @@ func TestSaveAndLoad(t *testing.T) {
 	testPath := filepath.Join(tmpDir, "test.txt")
 	content := "Hello World\nLine 2"
 
-	// Test Save
+	// Test Save (default: no final newline)
 	err = Save(testPath, content)
 	if err != nil {
 		t.Fatalf("Save() error: %v", err)
@@ -29,37 +29,118 @@ func TestSaveAndLoad(t *testing.T) {
 		t.Fatalf("Load() error: %v", err)
 	}
 
-	// Content should have newline appended
-	expected := content + "\n"
-	if loaded != expected {
-		t.Errorf("Load() = %q, want %q", loaded, expected)
+	// Content should be unchanged (no auto newline by default)
+	if loaded != content {
+		t.Errorf("Load() = %q, want %q", loaded, content)
 	}
 }
 
-func TestSaveWithNewline(t *testing.T) {
+func TestSaveWithOptions(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "gesh-test-*")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	testPath := filepath.Join(tmpDir, "test.txt")
-	content := "Already has newline\n"
+	t.Run("FinalNewline", func(t *testing.T) {
+		testPath := filepath.Join(tmpDir, "final_newline.txt")
+		content := "No newline at end"
 
-	err = Save(testPath, content)
-	if err != nil {
-		t.Fatalf("Save() error: %v", err)
-	}
+		opts := SaveOptions{FinalNewline: true}
+		err = SaveWithOptions(testPath, content, opts)
+		if err != nil {
+			t.Fatalf("SaveWithOptions() error: %v", err)
+		}
 
-	loaded, err := Load(testPath)
-	if err != nil {
-		t.Fatalf("Load() error: %v", err)
-	}
+		loaded, err := Load(testPath)
+		if err != nil {
+			t.Fatalf("Load() error: %v", err)
+		}
 
-	// Should not double the newline
-	if loaded != content {
-		t.Errorf("Load() = %q, want %q", loaded, content)
-	}
+		expected := content + "\n"
+		if loaded != expected {
+			t.Errorf("Load() = %q, want %q", loaded, expected)
+		}
+	})
+
+	t.Run("TrimTrailingSpaces", func(t *testing.T) {
+		testPath := filepath.Join(tmpDir, "trim_spaces.txt")
+		content := "Line with spaces   \nAnother line\t\t\n"
+
+		opts := SaveOptions{TrimTrailingSpaces: true}
+		err = SaveWithOptions(testPath, content, opts)
+		if err != nil {
+			t.Fatalf("SaveWithOptions() error: %v", err)
+		}
+
+		loaded, err := Load(testPath)
+		if err != nil {
+			t.Fatalf("Load() error: %v", err)
+		}
+
+		expected := "Line with spaces\nAnother line\n"
+		if loaded != expected {
+			t.Errorf("Load() = %q, want %q", loaded, expected)
+		}
+	})
+
+	t.Run("CreateBackup", func(t *testing.T) {
+		testPath := filepath.Join(tmpDir, "backup_test.txt")
+		originalContent := "Original content"
+
+		// Create original file
+		err = Save(testPath, originalContent)
+		if err != nil {
+			t.Fatalf("Save() error: %v", err)
+		}
+
+		// Save with backup
+		newContent := "New content"
+		opts := SaveOptions{CreateBackup: true}
+		err = SaveWithOptions(testPath, newContent, opts)
+		if err != nil {
+			t.Fatalf("SaveWithOptions() error: %v", err)
+		}
+
+		// Check backup exists
+		backupPath := testPath + ".bak"
+		if !Exists(backupPath) {
+			t.Error("Backup file should exist")
+		}
+
+		// Check backup content
+		backupContent, err := Load(backupPath)
+		if err != nil {
+			t.Fatalf("Load() backup error: %v", err)
+		}
+		if backupContent != originalContent {
+			t.Errorf("Backup content = %q, want %q", backupContent, originalContent)
+		}
+	})
+
+	t.Run("CombinedOptions", func(t *testing.T) {
+		testPath := filepath.Join(tmpDir, "combined.txt")
+		content := "Line with spaces   \nNo final newline"
+
+		opts := SaveOptions{
+			TrimTrailingSpaces: true,
+			FinalNewline:       true,
+		}
+		err = SaveWithOptions(testPath, content, opts)
+		if err != nil {
+			t.Fatalf("SaveWithOptions() error: %v", err)
+		}
+
+		loaded, err := Load(testPath)
+		if err != nil {
+			t.Fatalf("Load() error: %v", err)
+		}
+
+		expected := "Line with spaces\nNo final newline\n"
+		if loaded != expected {
+			t.Errorf("Load() = %q, want %q", loaded, expected)
+		}
+	})
 }
 
 func TestSaveCreatesDirectory(t *testing.T) {

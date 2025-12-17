@@ -4,11 +4,33 @@ package file
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+// SaveOptions contains options for saving files.
+type SaveOptions struct {
+	TrimTrailingSpaces bool
+	FinalNewline       bool
+	CreateBackup       bool
+}
+
+// DefaultSaveOptions returns default save options.
+func DefaultSaveOptions() SaveOptions {
+	return SaveOptions{
+		TrimTrailingSpaces: false,
+		FinalNewline:       false,
+		CreateBackup:       false,
+	}
+}
 
 // Save writes content to a file.
 // Creates the file if it doesn't exist, overwrites if it does.
 func Save(path string, content string) error {
+	return SaveWithOptions(path, content, DefaultSaveOptions())
+}
+
+// SaveWithOptions writes content to a file with specified options.
+func SaveWithOptions(path string, content string, opts SaveOptions) error {
 	// Ensure directory exists
 	dir := filepath.Dir(path)
 	if dir != "" && dir != "." {
@@ -17,13 +39,41 @@ func Save(path string, content string) error {
 		}
 	}
 
-	// Write file with newline at end if not present
-	data := []byte(content)
-	if len(data) > 0 && data[len(data)-1] != '\n' {
-		data = append(data, '\n')
+	// Create backup if requested
+	if opts.CreateBackup {
+		if Exists(path) {
+			backupPath := path + ".bak"
+			if data, err := os.ReadFile(path); err == nil {
+				_ = os.WriteFile(backupPath, data, 0644)
+			}
+		}
 	}
 
-	return os.WriteFile(path, data, 0644)
+	// Process content
+	processedContent := content
+
+	// Trim trailing whitespace from each line
+	if opts.TrimTrailingSpaces {
+		processedContent = trimTrailingWhitespace(processedContent)
+	}
+
+	// Ensure final newline
+	if opts.FinalNewline {
+		if len(processedContent) > 0 && !strings.HasSuffix(processedContent, "\n") {
+			processedContent += "\n"
+		}
+	}
+
+	return os.WriteFile(path, []byte(processedContent), 0644)
+}
+
+// trimTrailingWhitespace removes trailing spaces/tabs from each line.
+func trimTrailingWhitespace(content string) string {
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimRight(line, " \t")
+	}
+	return strings.Join(lines, "\n")
 }
 
 // Load reads content from a file.

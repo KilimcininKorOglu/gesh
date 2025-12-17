@@ -39,6 +39,9 @@ editor:
   
   # Ensure file ends with newline
   final_newline: false
+  
+  # Create backup file (.bak) before saving
+  create_backup: false
 
 # Theme name: dark, light, monokai, dracula, gruvbox
 theme: dark
@@ -89,6 +92,11 @@ theme: dark
 - **Type:** Boolean
 - **Default:** `false`
 - **Description:** Ensure file ends with a newline character
+
+#### `create_backup`
+- **Type:** Boolean
+- **Default:** `false`
+- **Description:** Create a backup file (.bak) before saving
 
 ---
 

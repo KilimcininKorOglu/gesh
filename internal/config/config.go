@@ -28,6 +28,7 @@ type EditorConfig struct {
 	ScrollPadding      int  `yaml:"scroll_padding"`
 	TrimTrailingSpaces bool `yaml:"trim_trailing_spaces"`
 	FinalNewline       bool `yaml:"final_newline"`
+	CreateBackup       bool `yaml:"create_backup"`
 }
 
 // DefaultConfig returns the default configuration.
@@ -42,6 +43,7 @@ func DefaultConfig() *Config {
 			ScrollPadding:      5,
 			TrimTrailingSpaces: false,
 			FinalNewline:       false,
+			CreateBackup:       false,
 		},
 		Theme: "dark",
 	}

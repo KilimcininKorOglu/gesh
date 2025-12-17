@@ -702,8 +702,13 @@ func (m *Model) saveFile() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	// Save to existing filepath
-	err := file.Save(m.filepath, m.Content())
+	// Save to existing filepath with options
+	opts := file.SaveOptions{
+		TrimTrailingSpaces: m.trimTrailingSpaces,
+		FinalNewline:       m.finalNewline,
+		CreateBackup:       m.createBackup,
+	}
+	err := file.SaveWithOptions(m.filepath, m.Content(), opts)
 	if err != nil {
 		m.SetStatusMessage("Error: " + err.Error())
 		return m, nil

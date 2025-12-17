@@ -155,6 +155,11 @@ func main() {
 		model.SetSyntaxHighlighting(false)
 	}
 
+	// Apply save options from config
+	model.SetTrimTrailingSpaces(cfg.Editor.TrimTrailingSpaces)
+	model.SetFinalNewline(cfg.Editor.FinalNewline)
+	model.SetCreateBackup(cfg.Editor.CreateBackup)
+
 	// Go to specific line/column if specified
 	if startLine > 0 {
 		model.GotoLine(startLine, startCol)
