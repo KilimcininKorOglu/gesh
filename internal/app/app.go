@@ -99,6 +99,16 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleReplaceConfirm(msg)
 	}
 
+	// Handle replace all mode
+	if m.mode == ModeReplaceAll {
+		return m.handleReplaceAllInput(msg)
+	}
+
+	// Handle replace all confirm mode
+	if m.mode == ModeReplaceAllConfirm {
+		return m.handleReplaceAllConfirm(msg)
+	}
+
 	// Handle open file mode
 	if m.mode == ModeOpen {
 		return m.handleOpenInput(msg)
@@ -172,10 +182,16 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.prevMatch()
 		return m, nil
 
-	case "ctrl+r", "ctrl+shift+r":
+	case "ctrl+r":
 		m.mode = ModeReplace
 		m.inputBuffer = m.searchQuery
-		m.inputPrompt = "Search: "
+		m.inputPrompt = "Replace: "
+		return m, nil
+
+	case "ctrl+shift+r":
+		m.mode = ModeReplaceAll
+		m.inputBuffer = m.searchQuery
+		m.inputPrompt = "Replace all: "
 		return m, nil
 
 	case "ctrl+o":
@@ -781,15 +797,15 @@ func (m *Model) handleReplaceInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 }
 
-// handleReplaceConfirm handles input in replace confirm mode.
+// handleReplaceConfirm handles input in replace confirm mode (single replace).
 func (m *Model) handleReplaceConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "enter":
 		m.replaceText = m.inputBuffer
 		m.findMatches()
 		if len(m.searchMatches) > 0 {
-			m.replaceAll()
-			m.SetStatusMessage(fmt.Sprintf("Replaced %d occurrences", len(m.searchMatches)))
+			m.replaceOne()
+			m.SetStatusMessage("Replaced. Press F3 for next, Ctrl+R to replace again")
 		} else {
 			m.SetStatusMessage("No matches found")
 		}
@@ -814,6 +830,49 @@ func (m *Model) handleReplaceConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.inputBuffer += string(msg.Runes)
 		}
 		return m, nil
+	}
+}
+
+// replaceOne replaces the current match only.
+func (m *Model) replaceOne() {
+	if m.searchQuery == "" || len(m.searchMatches) == 0 {
+		return
+	}
+
+	// Get current match position
+	pos := m.searchMatches[m.searchIndex]
+	queryLen := len([]rune(m.searchQuery))
+
+	// Move to position and delete the match
+	m.buffer.MoveTo(pos + queryLen)
+	for i := 0; i < queryLen; i++ {
+		m.buffer.Delete()
+	}
+
+	// Insert replacement
+	m.buffer.InsertString(m.replaceText)
+
+	// Record for undo
+	m.history.Push(buffer.EditOperation{
+		Type:     buffer.OpDelete,
+		Position: pos,
+		Text:     m.searchQuery,
+	})
+	m.history.Push(buffer.EditOperation{
+		Type:     buffer.OpInsert,
+		Position: pos,
+		Text:     m.replaceText,
+	})
+
+	m.modified = true
+
+	// Re-find matches and go to next
+	m.findMatches()
+	if len(m.searchMatches) > 0 {
+		if m.searchIndex >= len(m.searchMatches) {
+			m.searchIndex = 0
+		}
+		m.goToMatch(m.searchIndex)
 	}
 }
 
@@ -844,6 +903,75 @@ func (m *Model) replaceAll() {
 		})
 
 		m.modified = true
+	}
+}
+
+// handleReplaceAllInput handles input in replace all mode.
+func (m *Model) handleReplaceAllInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		if m.inputBuffer != "" {
+			m.searchQuery = m.inputBuffer
+			m.inputBuffer = m.replaceText
+			m.inputPrompt = "Replace all with: "
+			m.mode = ModeReplaceAllConfirm
+		}
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	default:
+		if len(msg.Runes) > 0 {
+			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
+	}
+}
+
+// handleReplaceAllConfirm handles input in replace all confirm mode.
+func (m *Model) handleReplaceAllConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		m.replaceText = m.inputBuffer
+		m.findMatches()
+		count := len(m.searchMatches)
+		if count > 0 {
+			m.replaceAll()
+			m.SetStatusMessage(fmt.Sprintf("Replaced %d occurrences", count))
+		} else {
+			m.SetStatusMessage("No matches found")
+		}
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	default:
+		if len(msg.Runes) > 0 {
+			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
 	}
 }
 
@@ -1255,7 +1383,7 @@ func (m *Model) renderHelpBar() string {
 			helpKeyStyle.Render("N") + helpStyle.Render(" No"),
 			helpKeyStyle.Render("Esc") + helpStyle.Render(" Cancel"),
 		}
-	case ModeSaveAs, ModeGoto, ModeSearch, ModeReplace, ModeReplaceConfirm, ModeOpen:
+	case ModeSaveAs, ModeGoto, ModeSearch, ModeReplace, ModeReplaceConfirm, ModeReplaceAll, ModeReplaceAllConfirm, ModeOpen:
 		// Show input prompt
 		prompt := m.inputPrompt + m.inputBuffer + "█"
 		padding := m.width - len(prompt) - 2

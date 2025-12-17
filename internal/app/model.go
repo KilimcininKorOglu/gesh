@@ -19,10 +19,14 @@ const (
 	ModeQuit
 	// ModeSaveAs is the "save as" mode for entering filename.
 	ModeSaveAs
-	// ModeReplace is the "find and replace" mode.
+	// ModeReplace is the "find and replace one" mode.
 	ModeReplace
-	// ModeReplaceConfirm is the replace confirmation mode.
+	// ModeReplaceConfirm is the replace confirmation mode (for single replace).
 	ModeReplaceConfirm
+	// ModeReplaceAll is the "replace all" mode.
+	ModeReplaceAll
+	// ModeReplaceAllConfirm is the replace all confirmation mode.
+	ModeReplaceAllConfirm
 	// ModeOpen is the "open file" mode.
 	ModeOpen
 )
