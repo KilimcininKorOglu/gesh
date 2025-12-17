@@ -34,8 +34,13 @@
 |--------|----------|-------------|
 | Toggle Recording | `Ctrl+M` | Start/stop recording macro |
 | Play Macro | `Ctrl+Shift+M` | Play recorded macro |
+| Save Macro | `Alt+M` | Save macro to file |
+| Load Macro | `Alt+Shift+M` | Load macro from file |
 
 When recording, "REC" is shown in the status bar instead of "INS".
+
+Macros are saved to `~/.config/gesh/macros.json` (or `%APPDATA%\gesh\macros.json` on Windows).
+In load macro mode, press Tab for name completion.
 
 ---
 

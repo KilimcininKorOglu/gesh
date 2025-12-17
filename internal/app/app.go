@@ -283,6 +283,16 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleOpenInput(msg)
 	}
 
+	// Handle save macro mode
+	if m.mode == ModeSaveMacro {
+		return m.handleSaveMacroInput(msg)
+	}
+
+	// Handle load macro mode
+	if m.mode == ModeLoadMacro {
+		return m.handleLoadMacroInput(msg)
+	}
+
 	// Normal mode key handling
 	switch msg.String() {
 	case "ctrl+x":
@@ -384,6 +394,28 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		return m.playMacro()
+
+	case "alt+m":
+		// Save macro to file
+		if !m.macro.HasKeys() {
+			m.SetStatusMessage("No macro to save")
+			return m, nil
+		}
+		m.mode = ModeSaveMacro
+		m.inputBuffer = ""
+		m.inputPrompt = "Save macro as: "
+		return m, nil
+
+	case "alt+shift+m":
+		// Load macro from file
+		m.mode = ModeLoadMacro
+		m.inputBuffer = ""
+		m.inputPrompt = "Load macro: "
+		// Show available macros
+		if names, err := ListSavedMacros(); err == nil && len(names) > 0 {
+			m.SetStatusMessage("Available: " + strings.Join(names, ", "))
+		}
+		return m, nil
 
 	case "ctrl+s":
 		return m.saveFile()
@@ -1396,6 +1428,88 @@ func (m *Model) handleOpenInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 }
 
+// handleSaveMacroInput handles input in save macro mode.
+func (m *Model) handleSaveMacroInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		if m.inputBuffer != "" {
+			if err := m.macro.SaveMacro(m.inputBuffer); err != nil {
+				m.SetStatusMessage("Error saving macro: " + err.Error())
+			} else {
+				m.SetStatusMessage("Macro saved as: " + m.inputBuffer)
+			}
+		}
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	default:
+		if len(msg.Runes) > 0 {
+			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
+	}
+}
+
+// handleLoadMacroInput handles input in load macro mode.
+func (m *Model) handleLoadMacroInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		if m.inputBuffer != "" {
+			if err := m.macro.LoadMacro(m.inputBuffer); err != nil {
+				m.SetStatusMessage("Error loading macro: " + err.Error())
+			} else {
+				m.SetStatusMessage(fmt.Sprintf("Loaded macro: %s (%d keys)", m.inputBuffer, m.macro.KeyCount()))
+			}
+		}
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	case "tab":
+		// Tab completion for macro names
+		if names, err := ListSavedMacros(); err == nil {
+			for _, name := range names {
+				if strings.HasPrefix(name, m.inputBuffer) {
+					m.inputBuffer = name
+					break
+				}
+			}
+		}
+		return m, nil
+
+	default:
+		if len(msg.Runes) > 0 {
+			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
+	}
+}
+
 // cutLine cuts the current line to clipboard.
 func (m *Model) cutLine() {
 	currentLine := m.buffer.CurrentLine()
@@ -2259,7 +2373,7 @@ func (m *Model) renderHelpBar() string {
 			helpKeyStyle.Render("N") + helpStyle.Render(" No"),
 			helpKeyStyle.Render("Esc") + helpStyle.Render(" Cancel"),
 		}
-	case ModeSaveAs, ModeGoto, ModeSearch, ModeReplace, ModeReplaceConfirm, ModeReplaceAll, ModeReplaceAllConfirm, ModeOpen:
+	case ModeSaveAs, ModeGoto, ModeSearch, ModeReplace, ModeReplaceConfirm, ModeReplaceAll, ModeReplaceAllConfirm, ModeOpen, ModeSaveMacro, ModeLoadMacro:
 		// Show input prompt
 		prompt := m.inputPrompt + m.inputBuffer + "█"
 		padding := m.width - len(prompt) - 2

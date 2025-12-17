@@ -33,6 +33,10 @@ const (
 	ModeReplaceAllConfirm
 	// ModeOpen is the "open file" mode.
 	ModeOpen
+	// ModeSaveMacro is the "save macro" mode.
+	ModeSaveMacro
+	// ModeLoadMacro is the "load macro" mode.
+	ModeLoadMacro
 )
 
 // Model is the main Bubble Tea model for the editor.
