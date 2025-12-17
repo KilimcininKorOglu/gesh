@@ -55,6 +55,7 @@ gesh --help
 | `Ctrl+N` | New file |
 | `Ctrl+O` | Open file |
 | `Ctrl+S` | Save file |
+| `Ctrl+Shift+S` | Save as |
 | `Ctrl+X` | Exit (prompts to save if modified) |
 | `Ctrl+C` | Copy selection / Force quit |
 
@@ -100,7 +101,8 @@ gesh --help
 | Shortcut | Action |
 |----------|--------|
 | `Ctrl+W` | Search |
-| `Ctrl+R` | Find and replace |
+| `Ctrl+R` | Find and replace all |
+| `Ctrl+Shift+R` | Find and replace all |
 | `F3` | Next match |
 | `Shift+F3` | Previous match |
 
