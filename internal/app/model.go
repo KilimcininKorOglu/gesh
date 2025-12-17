@@ -19,6 +19,12 @@ const (
 	ModeQuit
 	// ModeSaveAs is the "save as" mode for entering filename.
 	ModeSaveAs
+	// ModeReplace is the "find and replace" mode.
+	ModeReplace
+	// ModeReplaceConfirm is the replace confirmation mode.
+	ModeReplaceConfirm
+	// ModeOpen is the "open file" mode.
+	ModeOpen
 )
 
 // Model is the main Bubble Tea model for the editor.
@@ -52,6 +58,17 @@ type Model struct {
 	searchQuery   string
 	searchMatches []int // positions of matches
 	searchIndex   int   // current match index
+
+	// Selection state
+	selecting      bool
+	selectionStart int
+	selectionEnd   int
+
+	// Clipboard
+	clipboard string
+
+	// Replace state
+	replaceText string
 
 	// Status message
 	statusMessage string

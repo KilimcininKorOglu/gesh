@@ -88,6 +88,21 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleSearchInput(msg)
 	}
 
+	// Handle replace mode
+	if m.mode == ModeReplace {
+		return m.handleReplaceInput(msg)
+	}
+
+	// Handle replace confirm mode
+	if m.mode == ModeReplaceConfirm {
+		return m.handleReplaceConfirm(msg)
+	}
+
+	// Handle open file mode
+	if m.mode == ModeOpen {
+		return m.handleOpenInput(msg)
+	}
+
 	// Normal mode key handling
 	switch msg.String() {
 	case "ctrl+x":
@@ -124,6 +139,34 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "shift+f3":
 		m.prevMatch()
+		return m, nil
+
+	case "ctrl+r":
+		m.mode = ModeReplace
+		m.inputBuffer = m.searchQuery
+		m.inputPrompt = "Search: "
+		return m, nil
+
+	case "ctrl+o":
+		m.mode = ModeOpen
+		m.inputBuffer = ""
+		m.inputPrompt = "Open file: "
+		return m, nil
+
+	case "ctrl+u":
+		m.cutLine()
+		return m, nil
+
+	case "ctrl+v":
+		m.paste()
+		return m, nil
+
+	case "ctrl+left":
+		m.moveWordLeft()
+		return m, nil
+
+	case "ctrl+right":
+		m.moveWordRight()
 		return m, nil
 
 	// Navigation
@@ -604,6 +647,246 @@ func (m *Model) prevMatch() {
 	m.SetStatusMessage(fmt.Sprintf("Match %d of %d", m.searchIndex+1, len(m.searchMatches)))
 }
 
+// handleReplaceInput handles input in replace mode.
+func (m *Model) handleReplaceInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		if m.inputBuffer != "" {
+			m.searchQuery = m.inputBuffer
+			m.inputBuffer = m.replaceText
+			m.inputPrompt = "Replace with: "
+			m.mode = ModeReplaceConfirm
+		}
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	default:
+		if len(msg.Runes) > 0 {
+			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
+	}
+}
+
+// handleReplaceConfirm handles input in replace confirm mode.
+func (m *Model) handleReplaceConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		m.replaceText = m.inputBuffer
+		m.findMatches()
+		if len(m.searchMatches) > 0 {
+			m.replaceAll()
+			m.SetStatusMessage(fmt.Sprintf("Replaced %d occurrences", len(m.searchMatches)))
+		} else {
+			m.SetStatusMessage("No matches found")
+		}
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	default:
+		if len(msg.Runes) > 0 {
+			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
+	}
+}
+
+// replaceAll replaces all occurrences of searchQuery with replaceText.
+func (m *Model) replaceAll() {
+	if m.searchQuery == "" {
+		return
+	}
+
+	content := m.buffer.String()
+	newContent := strings.ReplaceAll(content, m.searchQuery, m.replaceText)
+
+	if content != newContent {
+		// Record for undo
+		m.history.Push(buffer.EditOperation{
+			Type:     buffer.OpDelete,
+			Position: 0,
+			Text:     content,
+		})
+
+		// Replace buffer content
+		m.buffer = buffer.NewFromString(newContent)
+
+		m.history.Push(buffer.EditOperation{
+			Type:     buffer.OpInsert,
+			Position: 0,
+			Text:     newContent,
+		})
+
+		m.modified = true
+	}
+}
+
+// handleOpenInput handles input in open file mode.
+func (m *Model) handleOpenInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		if m.inputBuffer != "" {
+			content, err := file.Load(m.inputBuffer)
+			if err != nil {
+				m.SetStatusMessage("Error: " + err.Error())
+			} else {
+				m.buffer = buffer.NewFromString(content)
+				m.history = buffer.NewHistory()
+				m.SetFilepath(m.inputBuffer)
+				m.modified = false
+				m.SetStatusMessage("Opened: " + m.filename)
+			}
+		}
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	default:
+		if len(msg.Runes) > 0 {
+			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
+	}
+}
+
+// cutLine cuts the current line to clipboard.
+func (m *Model) cutLine() {
+	currentLine := m.buffer.CurrentLine()
+	lineStart := m.buffer.LineStart(currentLine)
+	lineEnd := m.buffer.LineEnd(currentLine)
+
+	if lineStart < 0 || lineEnd < 0 {
+		return
+	}
+
+	// Get line content
+	m.clipboard = m.buffer.Line(currentLine)
+
+	// Include newline if not last line
+	deleteEnd := lineEnd
+	if currentLine < m.buffer.LineCount()-1 {
+		deleteEnd++
+		m.clipboard += "\n"
+	} else if lineStart > 0 {
+		lineStart--
+	}
+
+	// Delete the line
+	deletedText := m.buffer.Slice(lineStart, deleteEnd)
+	m.buffer.MoveTo(lineStart)
+	for i := lineStart; i < deleteEnd; i++ {
+		m.buffer.DeleteForward()
+	}
+
+	m.history.Push(buffer.EditOperation{
+		Type:     buffer.OpDelete,
+		Position: lineStart,
+		Text:     deletedText,
+	})
+
+	m.modified = true
+	m.SetStatusMessage("Line cut to clipboard")
+}
+
+// paste pastes content from clipboard.
+func (m *Model) paste() {
+	if m.clipboard == "" {
+		m.SetStatusMessage("Clipboard is empty")
+		return
+	}
+
+	pos := m.buffer.CursorPos()
+	m.buffer.InsertString(m.clipboard)
+
+	m.history.Push(buffer.EditOperation{
+		Type:     buffer.OpInsert,
+		Position: pos,
+		Text:     m.clipboard,
+	})
+
+	m.modified = true
+	m.SetStatusMessage("Pasted")
+}
+
+// moveWordLeft moves cursor to the beginning of the previous word.
+func (m *Model) moveWordLeft() {
+	pos := m.buffer.CursorPos()
+	if pos == 0 {
+		return
+	}
+
+	// Skip any spaces before current position
+	for pos > 0 && isSpace(m.buffer.RuneAt(pos-1)) {
+		pos--
+	}
+
+	// Move to start of word
+	for pos > 0 && !isSpace(m.buffer.RuneAt(pos-1)) {
+		pos--
+	}
+
+	m.buffer.MoveTo(pos)
+}
+
+// moveWordRight moves cursor to the beginning of the next word.
+func (m *Model) moveWordRight() {
+	pos := m.buffer.CursorPos()
+	length := m.buffer.Len()
+
+	// Skip current word
+	for pos < length && !isSpace(m.buffer.RuneAt(pos)) {
+		pos++
+	}
+
+	// Skip spaces
+	for pos < length && isSpace(m.buffer.RuneAt(pos)) {
+		pos++
+	}
+
+	m.buffer.MoveTo(pos)
+}
+
+// isSpace checks if a rune is a whitespace character.
+func isSpace(r rune) bool {
+	return r == ' ' || r == '\t' || r == '\n' || r == '\r'
+}
+
 // View renders the UI.
 func (m *Model) View() string {
 	if m.quitting {
@@ -766,7 +1049,7 @@ func (m *Model) renderHelpBar() string {
 			helpKeyStyle.Render("N") + helpStyle.Render(" No"),
 			helpKeyStyle.Render("Esc") + helpStyle.Render(" Cancel"),
 		}
-	case ModeSaveAs, ModeGoto, ModeSearch:
+	case ModeSaveAs, ModeGoto, ModeSearch, ModeReplace, ModeReplaceConfirm, ModeOpen:
 		// Show input prompt
 		prompt := m.inputPrompt + m.inputBuffer + "█"
 		padding := m.width - len(prompt) - 2
@@ -778,10 +1061,11 @@ func (m *Model) renderHelpBar() string {
 		helps = []string{
 			helpKeyStyle.Render("^X") + helpStyle.Render(" Exit"),
 			helpKeyStyle.Render("^S") + helpStyle.Render(" Save"),
+			helpKeyStyle.Render("^O") + helpStyle.Render(" Open"),
 			helpKeyStyle.Render("^W") + helpStyle.Render(" Search"),
-			helpKeyStyle.Render("^G") + helpStyle.Render(" Goto"),
-			helpKeyStyle.Render("^K") + helpStyle.Render(" Cut"),
-			helpKeyStyle.Render("^Z") + helpStyle.Render(" Undo"),
+			helpKeyStyle.Render("^R") + helpStyle.Render(" Replace"),
+			helpKeyStyle.Render("^U") + helpStyle.Render(" Cut"),
+			helpKeyStyle.Render("^V") + helpStyle.Render(" Paste"),
 		}
 	}
 
