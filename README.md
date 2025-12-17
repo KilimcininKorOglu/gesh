@@ -52,15 +52,18 @@ gesh --help
 
 | Shortcut | Action |
 |----------|--------|
+| `Ctrl+N` | New file |
+| `Ctrl+O` | Open file |
 | `Ctrl+S` | Save file |
 | `Ctrl+X` | Exit (prompts to save if modified) |
-| `Ctrl+C` | Force quit |
+| `Ctrl+C` | Copy selection / Force quit |
 
 ### Navigation
 
 | Shortcut | Action |
 |----------|--------|
 | `↑` `↓` `←` `→` | Move cursor |
+| `Ctrl+←` / `Ctrl+→` | Move by word |
 | `Home` / `Ctrl+A` | Start of line |
 | `End` / `Ctrl+E` | End of line |
 | `Ctrl+Home` | Start of file |
@@ -76,15 +79,26 @@ gesh --help
 | `Backspace` | Delete character before cursor |
 | `Delete` | Delete character after cursor |
 | `Ctrl+K` | Delete current line |
+| `Ctrl+U` | Cut line to clipboard |
+| `Ctrl+V` | Paste from clipboard |
 | `Ctrl+Z` | Undo |
 | `Ctrl+Y` | Redo |
 | `Tab` | Insert 4 spaces |
 
-### Search
+### Selection
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Space` | Toggle selection mode |
+| `Shift+↑↓←→` | Select text |
+| `Ctrl+C` | Copy selection |
+
+### Search & Replace
 
 | Shortcut | Action |
 |----------|--------|
 | `Ctrl+W` | Search |
+| `Ctrl+R` | Find and replace |
 | `F3` | Next match |
 | `Shift+F3` | Previous match |
 
