@@ -122,7 +122,8 @@ func scrollTick() tea.Cmd {
 
 // Init initializes the model.
 func (m *Model) Init() tea.Cmd {
-	return autoSaveTick()
+	// Request initial window size to trigger first render
+	return tea.Batch(tea.WindowSize(), autoSaveTick())
 }
 
 // Update handles messages and updates the model.
@@ -134,7 +135,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleMouseMsg(msg)
 	case tea.WindowSizeMsg:
 		m.SetSize(msg.Width, msg.Height)
-		return m, nil
+		return m, tea.ClearScreen
 	case autoSaveTickMsg:
 		// Check if auto-save should trigger
 		if m.ShouldAutoSave() {
@@ -960,7 +961,7 @@ func (m *Model) moveToLineEnd() {
 
 // pageUp moves the cursor up by a page.
 func (m *Model) pageUp() {
-	visibleLines := m.height - 3
+	visibleLines := m.height - 4 // header(1) + status(1) + help(2)
 	if visibleLines < 1 {
 		visibleLines = 1
 	}
@@ -986,7 +987,7 @@ func (m *Model) pageUp() {
 
 // pageDown moves the cursor down by a page.
 func (m *Model) pageDown() {
-	visibleLines := m.height - 3
+	visibleLines := m.height - 4 // header(1) + status(1) + help(2)
 	if visibleLines < 1 {
 		visibleLines = 1
 	}
@@ -1790,7 +1791,7 @@ func (m *Model) deleteWordRight() {
 // ensureCursorVisible ensures the cursor is visible in the viewport.
 func (m *Model) ensureCursorVisible() {
 	currentLine := m.buffer.CurrentLine()
-	editorHeight := m.height - 3 // header + status + help
+	editorHeight := m.height - 4 // header(1) + status(1) + help(2)
 
 	if currentLine < m.viewportTopLine {
 		m.viewportTopLine = currentLine
@@ -2182,8 +2183,12 @@ func (m *Model) View() string {
 		return ""
 	}
 
-	if m.width == 0 || m.height == 0 {
-		return "Initializing..."
+	// Set default size if not yet received from terminal
+	if m.width == 0 {
+		m.width = 80
+	}
+	if m.height == 0 {
+		m.height = 24
 	}
 
 	var b strings.Builder
@@ -2194,7 +2199,7 @@ func (m *Model) View() string {
 		b.WriteString("\n")
 	}
 
-	// Header
+	// Header - always render
 	b.WriteString(m.renderHeader())
 	b.WriteString("\n")
 
@@ -2230,20 +2235,18 @@ func (m *Model) renderHeader() string {
 	// Encoding and line ending info
 	rightInfo := fmt.Sprintf("%s %s", m.encoding, m.lineEnding)
 
-	// Calculate padding
-	contentWidth := len(logo) + 3 + len(filename) + len(rightInfo)
+	// Calculate padding using rune count for proper width calculation
+	// Note: 𒄑 is a wide character, count it as 2 cells
+	logoLen := len([]rune(logo)) + 1 // +1 for wide cuneiform character
+	contentWidth := logoLen + 3 + len([]rune(filename)) + len([]rune(rightInfo))
 	padding := m.width - contentWidth
 	if padding < 0 {
 		padding = 0
 	}
 
-	line := headerStyle.Render(logo) +
-		headerStyle.Render(" │ ") +
-		headerStyle.Render(filename) +
-		headerStyle.Render(strings.Repeat(" ", padding)) +
-		headerStyle.Render(rightInfo)
-
-	return line
+	// Build the full header line and render with full width
+	headerContent := logo + " │ " + filename + strings.Repeat(" ", padding) + rightInfo
+	return headerStyle.Width(m.width).Render(headerContent)
 }
 
 // renderTabBar renders the tab bar showing all open tabs.
@@ -2297,8 +2300,8 @@ func (m *Model) renderTabBar() string {
 func (m *Model) renderSplitEditor() string {
 	var b strings.Builder
 
-	// Calculate editor area height
-	editorHeight := m.height - 3
+	// Calculate editor area height: header(1) + status(1) + help(2) = 4
+	editorHeight := m.height - 4
 	if m.showTabs && m.TabCount() > 1 {
 		editorHeight--
 	}
@@ -2444,8 +2447,12 @@ func padOrTruncate(s string, width int) string {
 func (m *Model) renderEditor() string {
 	var b strings.Builder
 
-	// Calculate visible lines (height minus header, status, help, and optionally tab bar)
-	visibleLines := m.height - 3
+	// Calculate visible lines:
+	// - Header: 1 line
+	// - Status bar: 1 line
+	// - Help bar: 2 lines
+	// Total: 4 lines reserved
+	visibleLines := m.height - 4
 	if m.showTabs && m.TabCount() > 1 {
 		visibleLines-- // Account for tab bar
 	}
