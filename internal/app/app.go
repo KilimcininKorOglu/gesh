@@ -51,10 +51,75 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		return m.handleKeyMsg(msg)
+	case tea.MouseMsg:
+		return m.handleMouseMsg(msg)
 	case tea.WindowSizeMsg:
 		m.SetSize(msg.Width, msg.Height)
 		return m, nil
 	}
+	return m, nil
+}
+
+// handleMouseMsg processes mouse input.
+func (m *Model) handleMouseMsg(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
+	// Only handle in normal mode
+	if m.mode != ModeNormal {
+		return m, nil
+	}
+
+	switch msg.Button {
+	case tea.MouseButtonLeft:
+		if msg.Action == tea.MouseActionPress {
+			// Calculate which line was clicked (account for header)
+			clickedLine := m.viewportTopLine + msg.Y - 1 // -1 for header
+
+			// Check bounds
+			if clickedLine < 0 {
+				clickedLine = 0
+			}
+			if clickedLine >= m.buffer.LineCount() {
+				clickedLine = m.buffer.LineCount() - 1
+			}
+
+			// Calculate column (account for line numbers: "→123 │ " = ~7 chars)
+			lineNumWidth := 7
+			clickedCol := msg.X - lineNumWidth
+			if clickedCol < 0 {
+				clickedCol = 0
+			}
+
+			// Get line content and clamp column
+			lineContent := m.buffer.Line(clickedLine)
+			lineLen := len([]rune(lineContent))
+			if clickedCol > lineLen {
+				clickedCol = lineLen
+			}
+
+			// Move cursor
+			lineStart := m.buffer.LineStart(clickedLine)
+			m.buffer.MoveTo(lineStart + clickedCol)
+			m.clearSelection()
+		}
+
+	case tea.MouseButtonWheelUp:
+		// Scroll up
+		m.viewportTopLine -= 3
+		if m.viewportTopLine < 0 {
+			m.viewportTopLine = 0
+		}
+
+	case tea.MouseButtonWheelDown:
+		// Scroll down
+		maxTop := m.buffer.LineCount() - (m.height - 3)
+		if maxTop < 0 {
+			maxTop = 0
+		}
+		m.viewportTopLine += 3
+		if m.viewportTopLine > maxTop {
+			m.viewportTopLine = maxTop
+		}
+	}
+
 	return m, nil
 }
 
