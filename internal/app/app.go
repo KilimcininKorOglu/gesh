@@ -77,6 +77,11 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleSaveAsInput(msg)
 	}
 
+	// Handle goto mode
+	if m.mode == ModeGoto {
+		return m.handleGotoInput(msg)
+	}
+
 	// Normal mode key handling
 	switch msg.String() {
 	case "ctrl+x":
@@ -94,6 +99,12 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "ctrl+s":
 		return m.saveFile()
+
+	case "ctrl+g":
+		m.mode = ModeGoto
+		m.inputBuffer = ""
+		m.inputPrompt = fmt.Sprintf("Go to line [1-%d]: ", m.buffer.LineCount())
+		return m, nil
 
 	// Navigation
 	case "up", "ctrl+p":
@@ -243,6 +254,63 @@ func (m *Model) handleSaveAsInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	default:
 		if len(msg.Runes) > 0 {
 			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
+	}
+}
+
+// handleGotoInput handles input in goto mode.
+func (m *Model) handleGotoInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		if m.inputBuffer != "" {
+			// Parse line number
+			var lineNum int
+			_, err := fmt.Sscanf(m.inputBuffer, "%d", &lineNum)
+			if err != nil || lineNum < 1 {
+				m.SetStatusMessage("Invalid line number")
+				m.mode = ModeNormal
+				m.inputBuffer = ""
+				return m, nil
+			}
+
+			// Convert to 0-indexed and clamp
+			lineNum--
+			maxLine := m.buffer.LineCount() - 1
+			if lineNum > maxLine {
+				lineNum = maxLine
+			}
+
+			// Move to line start
+			lineStart := m.buffer.LineStart(lineNum)
+			if lineStart >= 0 {
+				m.buffer.MoveTo(lineStart)
+			}
+
+			m.mode = ModeNormal
+			m.inputBuffer = ""
+			m.SetStatusMessage(fmt.Sprintf("Line %d", lineNum+1))
+		}
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	default:
+		// Only accept digits
+		for _, r := range msg.Runes {
+			if r >= '0' && r <= '9' {
+				m.inputBuffer += string(r)
+			}
 		}
 		return m, nil
 	}
@@ -410,7 +478,7 @@ func (m *Model) renderHelpBar() string {
 			helpKeyStyle.Render("N") + helpStyle.Render(" No"),
 			helpKeyStyle.Render("Esc") + helpStyle.Render(" Cancel"),
 		}
-	case ModeSaveAs:
+	case ModeSaveAs, ModeGoto:
 		// Show input prompt
 		prompt := m.inputPrompt + m.inputBuffer + "█"
 		padding := m.width - len(prompt) - 2
