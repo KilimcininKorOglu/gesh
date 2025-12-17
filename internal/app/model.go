@@ -47,6 +47,11 @@ type Model struct {
 	inputBuffer string
 	inputPrompt string
 
+	// Search state
+	searchQuery   string
+	searchMatches []int // positions of matches
+	searchIndex   int   // current match index
+
 	// Status message
 	statusMessage string
 

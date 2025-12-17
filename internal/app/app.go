@@ -82,6 +82,11 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleGotoInput(msg)
 	}
 
+	// Handle search mode
+	if m.mode == ModeSearch {
+		return m.handleSearchInput(msg)
+	}
+
 	// Normal mode key handling
 	switch msg.String() {
 	case "ctrl+x":
@@ -104,6 +109,20 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.mode = ModeGoto
 		m.inputBuffer = ""
 		m.inputPrompt = fmt.Sprintf("Go to line [1-%d]: ", m.buffer.LineCount())
+		return m, nil
+
+	case "ctrl+w":
+		m.mode = ModeSearch
+		m.inputBuffer = m.searchQuery // Pre-fill with last search
+		m.inputPrompt = "Search: "
+		return m, nil
+
+	case "f3":
+		m.nextMatch()
+		return m, nil
+
+	case "shift+f3":
+		m.prevMatch()
 		return m, nil
 
 	// Navigation
@@ -316,6 +335,97 @@ func (m *Model) handleGotoInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 }
 
+// handleSearchInput handles input in search mode.
+func (m *Model) handleSearchInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		if m.inputBuffer != "" {
+			m.searchQuery = m.inputBuffer
+			m.findMatches()
+			if len(m.searchMatches) > 0 {
+				m.searchIndex = 0
+				m.goToMatch(0)
+				m.SetStatusMessage(fmt.Sprintf("Match %d of %d", m.searchIndex+1, len(m.searchMatches)))
+			} else {
+				m.SetStatusMessage("No matches found")
+			}
+		}
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		return m, nil
+
+	case "esc":
+		m.mode = ModeNormal
+		m.inputBuffer = ""
+		m.SetStatusMessage("")
+		return m, nil
+
+	case "backspace":
+		if len(m.inputBuffer) > 0 {
+			m.inputBuffer = m.inputBuffer[:len(m.inputBuffer)-1]
+		}
+		return m, nil
+
+	default:
+		if len(msg.Runes) > 0 {
+			m.inputBuffer += string(msg.Runes)
+		}
+		return m, nil
+	}
+}
+
+// findMatches finds all occurrences of the search query in the buffer.
+func (m *Model) findMatches() {
+	m.searchMatches = nil
+	if m.searchQuery == "" {
+		return
+	}
+
+	content := m.buffer.String()
+	query := m.searchQuery
+	pos := 0
+
+	for {
+		idx := strings.Index(content[pos:], query)
+		if idx == -1 {
+			break
+		}
+		m.searchMatches = append(m.searchMatches, pos+idx)
+		pos += idx + 1
+	}
+}
+
+// goToMatch moves the cursor to the specified match index.
+func (m *Model) goToMatch(index int) {
+	if index < 0 || index >= len(m.searchMatches) {
+		return
+	}
+	m.buffer.MoveTo(m.searchMatches[index])
+}
+
+// nextMatch moves to the next search match.
+func (m *Model) nextMatch() {
+	if len(m.searchMatches) == 0 {
+		return
+	}
+	m.searchIndex = (m.searchIndex + 1) % len(m.searchMatches)
+	m.goToMatch(m.searchIndex)
+	m.SetStatusMessage(fmt.Sprintf("Match %d of %d", m.searchIndex+1, len(m.searchMatches)))
+}
+
+// prevMatch moves to the previous search match.
+func (m *Model) prevMatch() {
+	if len(m.searchMatches) == 0 {
+		return
+	}
+	m.searchIndex--
+	if m.searchIndex < 0 {
+		m.searchIndex = len(m.searchMatches) - 1
+	}
+	m.goToMatch(m.searchIndex)
+	m.SetStatusMessage(fmt.Sprintf("Match %d of %d", m.searchIndex+1, len(m.searchMatches)))
+}
+
 // View renders the UI.
 func (m *Model) View() string {
 	if m.quitting {
@@ -478,7 +588,7 @@ func (m *Model) renderHelpBar() string {
 			helpKeyStyle.Render("N") + helpStyle.Render(" No"),
 			helpKeyStyle.Render("Esc") + helpStyle.Render(" Cancel"),
 		}
-	case ModeSaveAs, ModeGoto:
+	case ModeSaveAs, ModeGoto, ModeSearch:
 		// Show input prompt
 		prompt := m.inputPrompt + m.inputBuffer + "█"
 		padding := m.width - len(prompt) - 2
