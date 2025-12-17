@@ -20,6 +20,7 @@ type GapBuffer struct {
 	data     []rune // Character storage including the gap
 	gapStart int    // Index where the gap begins (cursor position)
 	gapEnd   int    // Index where the gap ends (first char after gap)
+	version  int    // Incremented on every modification for cache invalidation
 }
 
 // New creates a new empty GapBuffer with default gap size.
@@ -74,6 +75,11 @@ func (gb *GapBuffer) expandGap(minSize int) {
 	gb.gapEnd = gb.gapStart + gb.gapSize() + newGapSize
 }
 
+// Version returns the buffer version, incremented on every modification.
+func (gb *GapBuffer) Version() int {
+	return gb.version
+}
+
 // Insert adds a single rune at the cursor position (gapStart).
 // The cursor moves one position to the right after insertion.
 func (gb *GapBuffer) Insert(r rune) {
@@ -83,6 +89,7 @@ func (gb *GapBuffer) Insert(r rune) {
 
 	gb.data[gb.gapStart] = r
 	gb.gapStart++
+	gb.version++
 }
 
 // InsertString adds a string at the cursor position.
@@ -99,6 +106,7 @@ func (gb *GapBuffer) InsertString(s string) {
 
 	copy(gb.data[gb.gapStart:], runes)
 	gb.gapStart += len(runes)
+	gb.version++
 }
 
 // Delete removes the rune before the cursor (backspace behavior).
@@ -109,6 +117,7 @@ func (gb *GapBuffer) Delete() rune {
 	}
 
 	gb.gapStart--
+	gb.version++
 	return gb.data[gb.gapStart]
 }
 
@@ -121,6 +130,7 @@ func (gb *GapBuffer) DeleteForward() rune {
 
 	r := gb.data[gb.gapEnd]
 	gb.gapEnd++
+	gb.version++
 	return r
 }
 

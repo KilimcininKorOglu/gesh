@@ -112,6 +112,11 @@ type Model struct {
 	// File watcher
 	fileChanged bool // external change detected
 
+	// Render cache for incremental rendering
+	cachedLines       map[int]string // line number -> rendered content
+	lastRenderVersion int            // buffer version at last render
+	dirtyLines        map[int]bool   // lines that need re-render
+
 	// Status message
 	statusMessage string
 
@@ -136,6 +141,8 @@ func New() *Model {
 		syntaxHighlighting: true,
 		showTabs:           true,
 		macro:              NewMacroRecorder(),
+		cachedLines:        make(map[int]string),
+		dirtyLines:         make(map[int]bool),
 	}
 }
 
@@ -157,6 +164,8 @@ func NewWithContent(content string) *Model {
 		syntaxHighlighting: true,
 		showTabs:           true,
 		macro:              NewMacroRecorder(),
+		cachedLines:        make(map[int]string),
+		dirtyLines:         make(map[int]bool),
 	}
 }
 
@@ -181,6 +190,8 @@ func NewFromFile(filepath, filename, content string) *Model {
 		syntaxHighlighting: true,
 		showTabs:           true,
 		macro:              NewMacroRecorder(),
+		cachedLines:        make(map[int]string),
+		dirtyLines:         make(map[int]bool),
 	}
 }
 
@@ -205,6 +216,8 @@ func NewFromFileWithInfo(filepath, filename, content, encoding, lineEnding strin
 		syntaxHighlighting: true,
 		showTabs:           true,
 		macro:              NewMacroRecorder(),
+		cachedLines:        make(map[int]string),
+		dirtyLines:         make(map[int]bool),
 	}
 }
 
@@ -602,6 +615,56 @@ func (m *Model) SetFileChanged(changed bool) {
 // IsFileChanged returns true if file was changed externally.
 func (m *Model) IsFileChanged() bool {
 	return m.fileChanged
+}
+
+// InvalidateCache marks all cached lines as dirty.
+func (m *Model) InvalidateCache() {
+	m.cachedLines = make(map[int]string)
+	m.dirtyLines = make(map[int]bool)
+}
+
+// InvalidateLine marks a specific line as dirty.
+func (m *Model) InvalidateLine(line int) {
+	if m.dirtyLines == nil {
+		m.dirtyLines = make(map[int]bool)
+	}
+	m.dirtyLines[line] = true
+	delete(m.cachedLines, line)
+}
+
+// InvalidateLineRange marks a range of lines as dirty.
+func (m *Model) InvalidateLineRange(startLine, endLine int) {
+	for i := startLine; i <= endLine; i++ {
+		m.InvalidateLine(i)
+	}
+}
+
+// GetCachedLine returns a cached line if available.
+func (m *Model) GetCachedLine(line int) (string, bool) {
+	if m.cachedLines == nil {
+		return "", false
+	}
+	content, ok := m.cachedLines[line]
+	return content, ok
+}
+
+// SetCachedLine caches a rendered line.
+func (m *Model) SetCachedLine(line int, content string) {
+	if m.cachedLines == nil {
+		m.cachedLines = make(map[int]string)
+	}
+	m.cachedLines[line] = content
+	delete(m.dirtyLines, line)
+}
+
+// IsLineDirty checks if a line needs re-rendering.
+func (m *Model) IsLineDirty(line int) bool {
+	if m.dirtyLines == nil {
+		return true
+	}
+	_, dirty := m.dirtyLines[line]
+	_, cached := m.cachedLines[line]
+	return dirty || !cached
 }
 
 // IsSplit returns true if the view is split.
