@@ -2,7 +2,7 @@
 
 A minimal, fast, nano-like TUI text editor written in Go with [Bubble Tea](https://github.com/charmbracelet/bubbletea).
 
-> **Gesh** (𒄑) - Sumerian word meaning "pen, writing tool"
+> **Gesh** (𒄑) is the Sumerian cuneiform sign meaning "wood, tree" and by extension "pen, stylus, writing tool". In ancient Mesopotamia, scribes used reed styluses to write on clay tablets - the earliest form of text editing. This editor carries that legacy into the modern terminal.
 
 ## Features
 
