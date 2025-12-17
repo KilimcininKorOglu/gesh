@@ -780,6 +780,8 @@ func (m *Model) renderHelpBar() string {
 			helpKeyStyle.Render("^S") + helpStyle.Render(" Save"),
 			helpKeyStyle.Render("^W") + helpStyle.Render(" Search"),
 			helpKeyStyle.Render("^G") + helpStyle.Render(" Goto"),
+			helpKeyStyle.Render("^K") + helpStyle.Render(" Cut"),
+			helpKeyStyle.Render("^Z") + helpStyle.Render(" Undo"),
 		}
 	}
 
