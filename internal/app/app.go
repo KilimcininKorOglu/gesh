@@ -1313,12 +1313,26 @@ func (m *Model) renderEditor() string {
 	cursorLine := m.buffer.CurrentLine()
 	cursorCol := m.buffer.CurrentColumn()
 
-	// Adjust viewport to keep cursor visible
-	if cursorLine < m.viewportTopLine {
-		m.viewportTopLine = cursorLine
+	// Adjust viewport to keep cursor visible with scroll padding
+	scrollPadding := 5
+	if scrollPadding >= visibleLines/2 {
+		scrollPadding = visibleLines / 3
 	}
-	if cursorLine >= m.viewportTopLine+visibleLines {
-		m.viewportTopLine = cursorLine - visibleLines + 1
+
+	if cursorLine < m.viewportTopLine+scrollPadding {
+		m.viewportTopLine = cursorLine - scrollPadding
+		if m.viewportTopLine < 0 {
+			m.viewportTopLine = 0
+		}
+	}
+	if cursorLine >= m.viewportTopLine+visibleLines-scrollPadding {
+		m.viewportTopLine = cursorLine - visibleLines + scrollPadding + 1
+		if m.viewportTopLine > lineCount-visibleLines {
+			m.viewportTopLine = lineCount - visibleLines
+		}
+		if m.viewportTopLine < 0 {
+			m.viewportTopLine = 0
+		}
 	}
 
 	for i := 0; i < visibleLines; i++ {
