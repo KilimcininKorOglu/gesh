@@ -22,6 +22,7 @@ func main() {
 	var themeName string
 	var noConfig bool
 	var noLineNumbers bool
+	var noSyntax bool
 
 	// Parse arguments
 	args := os.Args[1:]
@@ -59,6 +60,9 @@ func main() {
 
 		case arg == "--no-line-numbers":
 			noLineNumbers = true
+
+		case arg == "--no-syntax":
+			noSyntax = true
 
 		case strings.HasPrefix(arg, "+"):
 			// Parse +N or +N:M
@@ -146,6 +150,11 @@ func main() {
 	// Apply word wrap setting from config
 	model.SetWordWrap(cfg.Editor.WordWrap)
 
+	// Apply syntax highlighting setting
+	if noSyntax {
+		model.SetSyntaxHighlighting(false)
+	}
+
 	// Go to specific line/column if specified
 	if startLine > 0 {
 		model.GotoLine(startLine, startCol)
@@ -172,6 +181,7 @@ func printHelp() {
 	fmt.Println("  -t, --theme NAME   Set color theme (dark, light, monokai, dracula, gruvbox)")
 	fmt.Println("  -n, --norc         Do not load config file")
 	fmt.Println("  --no-line-numbers  Hide line numbers")
+	fmt.Println("  --no-syntax        Disable syntax highlighting")
 	fmt.Println("  +N                 Open at line N")
 	fmt.Println("  +N:M               Open at line N, column M")
 	fmt.Println()

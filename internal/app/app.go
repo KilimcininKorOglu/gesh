@@ -10,6 +10,8 @@ import (
 
 	"github.com/KilimcininKorOglu/gesh/internal/buffer"
 	"github.com/KilimcininKorOglu/gesh/internal/file"
+	"github.com/KilimcininKorOglu/gesh/internal/syntax"
+	_ "github.com/KilimcininKorOglu/gesh/internal/syntax/languages" // Register languages
 	"github.com/KilimcininKorOglu/gesh/internal/ui/styles"
 )
 
@@ -25,6 +27,18 @@ var (
 	editorStyle      lipgloss.Style
 	selectionStyle   lipgloss.Style
 	searchMatchStyle lipgloss.Style
+
+	// Syntax highlighting styles
+	syntaxKeywordStyle  lipgloss.Style
+	syntaxTypeStyle     lipgloss.Style
+	syntaxStringStyle   lipgloss.Style
+	syntaxNumberStyle   lipgloss.Style
+	syntaxCommentStyle  lipgloss.Style
+	syntaxOperatorStyle lipgloss.Style
+	syntaxFunctionStyle lipgloss.Style
+	syntaxVariableStyle lipgloss.Style
+	syntaxConstantStyle lipgloss.Style
+	syntaxBuiltinStyle  lipgloss.Style
 )
 
 func init() {
@@ -68,6 +82,18 @@ func applyTheme(theme styles.Theme) {
 	searchMatchStyle = lipgloss.NewStyle().
 		Background(lipgloss.Color("#ffff00")).
 		Foreground(lipgloss.Color("#000000"))
+
+	// Syntax highlighting colors (theme-aware)
+	syntaxKeywordStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff79c6"))
+	syntaxTypeStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#8be9fd"))
+	syntaxStringStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#f1fa8c"))
+	syntaxNumberStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#bd93f9"))
+	syntaxCommentStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#6272a4"))
+	syntaxOperatorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff79c6"))
+	syntaxFunctionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#50fa7b"))
+	syntaxVariableStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffb86c"))
+	syntaxConstantStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#bd93f9"))
+	syntaxBuiltinStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#8be9fd"))
 }
 
 // Init initializes the model.
@@ -1220,6 +1246,52 @@ func isSpace(r rune) bool {
 	return r == ' ' || r == '\t' || r == '\n' || r == '\r'
 }
 
+// renderLineWithSyntax renders a line with syntax highlighting.
+func (m *Model) renderLineWithSyntax(line string) string {
+	lang := syntax.DetectLanguage(m.filename)
+	if lang == nil {
+		return editorStyle.Render(line)
+	}
+
+	highlighter := syntax.New(lang)
+	tokens := highlighter.Highlight(line)
+
+	var result strings.Builder
+	for _, token := range tokens {
+		style := getSyntaxStyle(token.Type)
+		result.WriteString(style.Render(token.Text))
+	}
+	return result.String()
+}
+
+// getSyntaxStyle returns the lipgloss style for a token type.
+func getSyntaxStyle(tokenType syntax.TokenType) lipgloss.Style {
+	switch tokenType {
+	case syntax.TokenKeyword:
+		return syntaxKeywordStyle
+	case syntax.TokenType_:
+		return syntaxTypeStyle
+	case syntax.TokenString:
+		return syntaxStringStyle
+	case syntax.TokenNumber:
+		return syntaxNumberStyle
+	case syntax.TokenComment:
+		return syntaxCommentStyle
+	case syntax.TokenOperator:
+		return syntaxOperatorStyle
+	case syntax.TokenFunction:
+		return syntaxFunctionStyle
+	case syntax.TokenVariable:
+		return syntaxVariableStyle
+	case syntax.TokenConstant:
+		return syntaxConstantStyle
+	case syntax.TokenBuiltin:
+		return syntaxBuiltinStyle
+	default:
+		return editorStyle
+	}
+}
+
 // renderLineWithSearchMatches renders a line with search matches highlighted.
 func (m *Model) renderLineWithSearchMatches(line, query string) string {
 	var result strings.Builder
@@ -1621,6 +1693,9 @@ func (m *Model) renderEditor() string {
 			} else if m.searchQuery != "" && strings.Contains(lineContent, m.searchQuery) {
 				// Line has search matches
 				b.WriteString(m.renderLineWithSearchMatches(lineContent, m.searchQuery))
+			} else if m.syntaxHighlighting {
+				// Syntax highlighting
+				b.WriteString(m.renderLineWithSyntax(lineContent))
 			} else {
 				b.WriteString(editorStyle.Render(lineContent))
 			}

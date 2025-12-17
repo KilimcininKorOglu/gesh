@@ -45,8 +45,9 @@ type Model struct {
 	readonly bool
 
 	// Display options
-	showLineNumbers bool
-	wordWrap        bool
+	showLineNumbers   bool
+	wordWrap          bool
+	syntaxHighlighting bool
 
 	// Terminal dimensions
 	width  int
@@ -92,34 +93,37 @@ type Model struct {
 // New creates a new editor model with an empty buffer.
 func New() *Model {
 	return &Model{
-		buffer:          buffer.New(),
-		history:         buffer.NewHistory(),
-		filename:        "[New File]",
-		mode:            ModeNormal,
-		showLineNumbers: true,
+		buffer:             buffer.New(),
+		history:            buffer.NewHistory(),
+		filename:           "[New File]",
+		mode:               ModeNormal,
+		showLineNumbers:    true,
+		syntaxHighlighting: true,
 	}
 }
 
 // NewWithContent creates a new editor model with initial content.
 func NewWithContent(content string) *Model {
 	return &Model{
-		buffer:          buffer.NewFromString(content),
-		history:         buffer.NewHistory(),
-		filename:        "[New File]",
-		mode:            ModeNormal,
-		showLineNumbers: true,
+		buffer:             buffer.NewFromString(content),
+		history:            buffer.NewHistory(),
+		filename:           "[New File]",
+		mode:               ModeNormal,
+		showLineNumbers:    true,
+		syntaxHighlighting: true,
 	}
 }
 
 // NewFromFile creates a new editor model for a specific file.
 func NewFromFile(filepath, filename, content string) *Model {
 	return &Model{
-		buffer:          buffer.NewFromString(content),
-		history:         buffer.NewHistory(),
-		filename:        filename,
-		filepath:        filepath,
-		mode:            ModeNormal,
-		showLineNumbers: true,
+		buffer:             buffer.NewFromString(content),
+		history:            buffer.NewHistory(),
+		filename:           filename,
+		filepath:           filepath,
+		mode:               ModeNormal,
+		showLineNumbers:    true,
+		syntaxHighlighting: true,
 	}
 }
 
@@ -266,4 +270,14 @@ func (m *Model) SetWordWrap(wrap bool) {
 // ToggleWordWrap toggles word wrap.
 func (m *Model) ToggleWordWrap() {
 	m.wordWrap = !m.wordWrap
+}
+
+// SetSyntaxHighlighting sets whether syntax highlighting is enabled.
+func (m *Model) SetSyntaxHighlighting(enabled bool) {
+	m.syntaxHighlighting = enabled
+}
+
+// ToggleSyntaxHighlighting toggles syntax highlighting.
+func (m *Model) ToggleSyntaxHighlighting() {
+	m.syntaxHighlighting = !m.syntaxHighlighting
 }
