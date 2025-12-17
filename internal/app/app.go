@@ -39,6 +39,10 @@ var (
 
 	editorStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#eaeaea"))
+
+	selectionStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("#3a3a5a")).
+			Foreground(lipgloss.Color("#ffffff"))
 )
 
 // Init initializes the model.
@@ -1308,6 +1312,32 @@ func (m *Model) clearSelection() {
 	m.selectionEnd = 0
 }
 
+// renderLineWithSelection renders a line with selection highlighting.
+func (m *Model) renderLineWithSelection(runes []rune, lineStart, lineEnd, selStart, selEnd, cursorCol int) string {
+	var result strings.Builder
+
+	for i, r := range runes {
+		charPos := lineStart + i
+		isSelected := charPos >= selStart && charPos < selEnd
+		isCursor := i == cursorCol
+
+		if isCursor {
+			result.WriteString(lipgloss.NewStyle().Reverse(true).Render(string(r)))
+		} else if isSelected {
+			result.WriteString(selectionStyle.Render(string(r)))
+		} else {
+			result.WriteString(editorStyle.Render(string(r)))
+		}
+	}
+
+	// Add cursor at end if needed
+	if cursorCol >= len(runes) && cursorCol >= 0 {
+		result.WriteString("█")
+	}
+
+	return result.String()
+}
+
 // selectAll selects all text in the buffer.
 func (m *Model) selectAll() {
 	m.selecting = true
@@ -1485,14 +1515,28 @@ func (m *Model) renderEditor() string {
 			// Line content
 			lineContent := m.buffer.Line(lineNum)
 
-			// Render with cursor if this is the cursor line
+			// Calculate line start position in buffer
+			lineStart := m.buffer.LineStart(lineNum)
+			lineEnd := lineStart + len([]rune(lineContent))
+
+			// Get selection bounds if selecting
+			selStart, selEnd := 0, 0
+			hasSelection := false
+			if m.selecting {
+				selStart, selEnd = m.getSelectionBounds()
+				hasSelection = selStart != selEnd
+			}
+
+			// Render line with selection and cursor
+			runes := []rune(lineContent)
 			if lineNum == cursorLine {
-				// Insert cursor character
-				if cursorCol >= len([]rune(lineContent)) {
+				// Cursor line - render with cursor
+				if hasSelection {
+					b.WriteString(m.renderLineWithSelection(runes, lineStart, lineEnd, selStart, selEnd, cursorCol))
+				} else if cursorCol >= len(runes) {
 					b.WriteString(editorStyle.Render(lineContent))
 					b.WriteString("█")
 				} else {
-					runes := []rune(lineContent)
 					before := string(runes[:cursorCol])
 					cursor := string(runes[cursorCol])
 					after := string(runes[cursorCol+1:])
@@ -1500,6 +1544,9 @@ func (m *Model) renderEditor() string {
 					b.WriteString(lipgloss.NewStyle().Reverse(true).Render(cursor))
 					b.WriteString(editorStyle.Render(after))
 				}
+			} else if hasSelection && lineEnd > selStart && lineStart < selEnd {
+				// Line has selection
+				b.WriteString(m.renderLineWithSelection(runes, lineStart, lineEnd, selStart, selEnd, -1))
 			} else {
 				b.WriteString(editorStyle.Render(lineContent))
 			}
