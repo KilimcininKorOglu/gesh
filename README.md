@@ -91,7 +91,9 @@ gesh --help
 |----------|--------|
 | `Ctrl+Space` | Toggle selection mode |
 | `Shift+↑↓←→` | Select text |
+| `Ctrl+A` (2x) | Select all |
 | `Ctrl+C` | Copy selection |
+| `Ctrl+X` | Cut selection |
 
 ### Search & Replace
 
