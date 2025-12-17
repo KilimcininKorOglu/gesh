@@ -2236,10 +2236,18 @@ func (m *Model) renderEditor() string {
 			// Line number with current line marker (if enabled)
 			if m.showLineNumbers {
 				var lineNumStr string
+				// Calculate width needed for line numbers
+				maxLineNum := lineCount
+				numWidth := len(fmt.Sprintf("%d", maxLineNum))
+				if numWidth < 3 {
+					numWidth = 3
+				}
+				
 				if lineNum == cursorLine {
-					lineNumStr = lineNumberStyle.Render(fmt.Sprintf("→%d", lineNum+1))
+					// Current line with arrow marker
+					lineNumStr = lineNumberStyle.Render(fmt.Sprintf("→%*d", numWidth, lineNum+1))
 				} else {
-					lineNumStr = lineNumberStyle.Render(fmt.Sprintf(" %d", lineNum+1))
+					lineNumStr = lineNumberStyle.Render(fmt.Sprintf(" %*d", numWidth, lineNum+1))
 				}
 				b.WriteString(lineNumStr)
 				b.WriteString(" │ ")
@@ -2304,11 +2312,17 @@ func (m *Model) renderEditor() string {
 				b.WriteString(editorStyle.Render(lineContent))
 			}
 		} else {
-			// Empty line indicator
+			// Empty line indicator (after end of file)
 			if m.showLineNumbers {
-				lineNumStr := lineNumberStyle.Render("~")
+				// Calculate width for alignment
+				maxLineNum := lineCount
+				numWidth := len(fmt.Sprintf("%d", maxLineNum))
+				if numWidth < 3 {
+					numWidth = 3
+				}
+				lineNumStr := lineNumberStyle.Render(fmt.Sprintf(" %*s", numWidth, "~"))
 				b.WriteString(lineNumStr)
-				b.WriteString(" │")
+				b.WriteString(" │ ")
 			}
 		}
 
@@ -2344,60 +2358,53 @@ func (m *Model) renderStatusBar() string {
 	}
 
 	// Right-aligned mode
-	rightInfo := "INS "
+	rightInfo := "INS"
 	if m.overwriteMode {
-		rightInfo = "OVR "
+		rightInfo = "OVR"
 	}
 	if m.macro != nil && m.macro.IsRecording() {
-		rightInfo = "REC "
+		rightInfo = "REC"
 	}
 
-	// Calculate content
+	// Calculate content - use rune count for proper width calculation
 	leftContent := posInfo + fileInfo + modeInfo
-	padding := m.width - len(leftContent) - len(rightInfo)
+	leftLen := len([]rune(leftContent))
+	rightLen := len([]rune(rightInfo))
+	padding := m.width - leftLen - rightLen - 2
 	if padding < 0 {
 		padding = 0
 	}
 
-	return statusStyle.Render(leftContent + strings.Repeat(" ", padding) + rightInfo)
+	return statusStyle.Render(leftContent + strings.Repeat(" ", padding) + rightInfo + " ") + "\n"
 }
 
 // renderHelpBar renders the bottom help bar.
 func (m *Model) renderHelpBar() string {
-	var helps []string
-
 	switch m.mode {
 	case ModeQuit:
-		helps = []string{
-			helpKeyStyle.Render("Y") + helpStyle.Render(" Yes"),
-			helpKeyStyle.Render("N") + helpStyle.Render(" No"),
-			helpKeyStyle.Render("Esc") + helpStyle.Render(" Cancel"),
-		}
-	case ModeSaveAs, ModeGoto, ModeSearch, ModeReplace, ModeReplaceConfirm, ModeReplaceAll, ModeReplaceAllConfirm, ModeOpen, ModeSaveMacro, ModeLoadMacro:
-		// Show input prompt
-		prompt := m.inputPrompt + m.inputBuffer + "█"
-		padding := m.width - len(prompt) - 2
+		content := " [Y] Yes  [N] No  [Esc] Cancel"
+		padding := m.width - len(content)
 		if padding < 0 {
 			padding = 0
 		}
-		return helpStyle.Render(" " + prompt + strings.Repeat(" ", padding))
-	default:
-		helps = []string{
-			helpKeyStyle.Render("^X") + helpStyle.Render(" Exit"),
-			helpKeyStyle.Render("^S") + helpStyle.Render(" Save"),
-			helpKeyStyle.Render("^O") + helpStyle.Render(" Open"),
-			helpKeyStyle.Render("^W") + helpStyle.Render(" Search"),
-			helpKeyStyle.Render("^R") + helpStyle.Render(" Replace"),
-			helpKeyStyle.Render("^U") + helpStyle.Render(" Cut"),
-			helpKeyStyle.Render("^V") + helpStyle.Render(" Paste"),
+		return helpStyle.Render(content + strings.Repeat(" ", padding))
+
+	case ModeSaveAs, ModeGoto, ModeSearch, ModeReplace, ModeReplaceConfirm, ModeReplaceAll, ModeReplaceAllConfirm, ModeOpen, ModeSaveMacro, ModeLoadMacro:
+		// Show input prompt
+		prompt := " " + m.inputPrompt + m.inputBuffer + "█"
+		padding := m.width - len([]rune(prompt))
+		if padding < 0 {
+			padding = 0
 		}
-	}
+		return helpStyle.Render(prompt + strings.Repeat(" ", padding))
 
-	content := " " + strings.Join(helps, "  ")
-	padding := m.width - len(content)
-	if padding < 0 {
-		padding = 0
+	default:
+		// Normal mode help
+		content := " ^X Exit  ^S Save  ^O Open  ^W Search  ^G Goto  ^K Cut  ^V Paste"
+		padding := m.width - len(content)
+		if padding < 0 {
+			padding = 0
+		}
+		return helpStyle.Render(content + strings.Repeat(" ", padding))
 	}
-
-	return helpStyle.Render(content + strings.Repeat(" ", padding))
 }
