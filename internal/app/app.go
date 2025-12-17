@@ -172,7 +172,7 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.prevMatch()
 		return m, nil
 
-	case "ctrl+r":
+	case "ctrl+r", "ctrl+shift+r":
 		m.mode = ModeReplace
 		m.inputBuffer = m.searchQuery
 		m.inputPrompt = "Search: "
