@@ -145,6 +145,13 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+s":
 		return m.saveFile()
 
+	case "ctrl+shift+s":
+		// Save As - always prompt for filename
+		m.mode = ModeSaveAs
+		m.inputBuffer = m.filepath
+		m.inputPrompt = "Save as: "
+		return m, nil
+
 	case "ctrl+g":
 		m.mode = ModeGoto
 		m.inputBuffer = ""
