@@ -48,13 +48,19 @@ type Language struct {
 type Highlighter struct {
 	language *Language
 	enabled  bool
+
+	// Token cache for performance
+	cache      map[int][]Token // line number -> tokens
+	cacheValid map[int]bool    // line number -> is valid
 }
 
 // New creates a new highlighter for the given language.
 func New(lang *Language) *Highlighter {
 	return &Highlighter{
-		language: lang,
-		enabled:  true,
+		language:   lang,
+		enabled:    true,
+		cache:      make(map[int][]Token),
+		cacheValid: make(map[int]bool),
 	}
 }
 
@@ -76,6 +82,34 @@ func (h *Highlighter) Language() *Language {
 // SetLanguage sets the current language.
 func (h *Highlighter) SetLanguage(lang *Language) {
 	h.language = lang
+	h.ClearCache() // Clear cache when language changes
+}
+
+// ClearCache clears the entire token cache.
+func (h *Highlighter) ClearCache() {
+	h.cache = make(map[int][]Token)
+	h.cacheValid = make(map[int]bool)
+}
+
+// InvalidateLine marks a specific line as needing re-highlighting.
+func (h *Highlighter) InvalidateLine(line int) {
+	h.cacheValid[line] = false
+}
+
+// InvalidateLineRange marks a range of lines as needing re-highlighting.
+func (h *Highlighter) InvalidateLineRange(startLine, endLine int) {
+	for i := startLine; i <= endLine; i++ {
+		h.cacheValid[i] = false
+	}
+}
+
+// InvalidateFromLine marks all lines from startLine onwards as invalid.
+func (h *Highlighter) InvalidateFromLine(startLine int) {
+	for line := range h.cacheValid {
+		if line >= startLine {
+			h.cacheValid[line] = false
+		}
+	}
 }
 
 // Highlight tokenizes a line of source code.
@@ -149,6 +183,44 @@ func (h *Highlighter) Highlight(line string) []Token {
 	}
 
 	return result
+}
+
+// HighlightLine tokenizes a line with caching support.
+// lineNum is used as the cache key.
+func (h *Highlighter) HighlightLine(lineNum int, line string) []Token {
+	// Check cache first
+	if h.cacheValid[lineNum] {
+		if cached, ok := h.cache[lineNum]; ok {
+			return cached
+		}
+	}
+
+	// Highlight and cache
+	tokens := h.Highlight(line)
+	h.cache[lineNum] = tokens
+	h.cacheValid[lineNum] = true
+
+	return tokens
+}
+
+// GetCachedTokens returns cached tokens if available.
+func (h *Highlighter) GetCachedTokens(lineNum int) ([]Token, bool) {
+	if !h.cacheValid[lineNum] {
+		return nil, false
+	}
+	tokens, ok := h.cache[lineNum]
+	return tokens, ok
+}
+
+// CacheStats returns cache statistics.
+func (h *Highlighter) CacheStats() (cached, total int) {
+	total = len(h.cache)
+	for _, valid := range h.cacheValid {
+		if valid {
+			cached++
+		}
+	}
+	return cached, total
 }
 
 // sortTokens sorts tokens by start position (simple insertion sort).

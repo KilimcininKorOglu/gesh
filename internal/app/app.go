@@ -558,7 +558,7 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				Position: pos - 1,
 				Text:     string(r),
 			})
-			m.modified = true
+			m.setModified()
 		}
 	case "delete":
 		if m.readonly {
@@ -572,7 +572,7 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				Position: pos,
 				Text:     string(r),
 			})
-			m.modified = true
+			m.setModified()
 		}
 	case "enter":
 		if m.readonly {
@@ -595,7 +595,7 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			Position: pos,
 			Text:     insertText,
 		})
-		m.modified = true
+		m.setModified()
 	case "tab":
 		if m.readonly {
 			m.SetStatusMessage("File is read-only")
@@ -608,7 +608,7 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			Position: pos,
 			Text:     "    ",
 		})
-		m.modified = true
+		m.setModified()
 
 	case "ctrl+z":
 		m.undo()
@@ -665,7 +665,7 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				Position: pos,
 				Text:     text,
 			})
-			m.modified = true
+			m.setModified()
 		}
 	}
 
@@ -868,7 +868,7 @@ func (m *Model) deleteLine() {
 		Text:     deletedText,
 	})
 
-	m.modified = true
+	m.setModified()
 	m.SetStatusMessage("Line deleted")
 }
 
@@ -1243,7 +1243,7 @@ func (m *Model) replaceOne() {
 		Text:     m.replaceText,
 	})
 
-	m.modified = true
+	m.setModified()
 
 	// Re-find matches and go to next
 	m.findMatches()
@@ -1281,7 +1281,7 @@ func (m *Model) replaceAll() {
 			Text:     newContent,
 		})
 
-		m.modified = true
+		m.setModified()
 	}
 }
 
@@ -1431,7 +1431,7 @@ func (m *Model) cutLine() {
 		Text:     deletedText,
 	})
 
-	m.modified = true
+	m.setModified()
 	m.SetStatusMessage("Line cut to clipboard")
 }
 
@@ -1451,7 +1451,7 @@ func (m *Model) paste() {
 		Text:     m.clipboard,
 	})
 
-	m.modified = true
+	m.setModified()
 	m.SetStatusMessage("Pasted")
 }
 
@@ -1499,14 +1499,19 @@ func isSpace(r rune) bool {
 }
 
 // renderLineWithSyntax renders a line with syntax highlighting.
-func (m *Model) renderLineWithSyntax(line string) string {
-	lang := syntax.DetectLanguage(m.filename)
-	if lang == nil {
-		return editorStyle.Render(line)
+// lineNum is used for token caching.
+func (m *Model) renderLineWithSyntax(lineNum int, line string) string {
+	// Initialize highlighter if needed
+	if m.highlighter == nil {
+		lang := syntax.DetectLanguage(m.filename)
+		if lang == nil {
+			return editorStyle.Render(line)
+		}
+		m.highlighter = syntax.New(lang)
 	}
 
-	highlighter := syntax.New(lang)
-	tokens := highlighter.Highlight(line)
+	// Use cached highlighting
+	tokens := m.highlighter.HighlightLine(lineNum, line)
 
 	var result strings.Builder
 	for _, token := range tokens {
@@ -1514,6 +1519,30 @@ func (m *Model) renderLineWithSyntax(line string) string {
 		result.WriteString(style.Render(token.Text))
 	}
 	return result.String()
+}
+
+// updateHighlighter updates the highlighter when filename changes.
+func (m *Model) updateHighlighter() {
+	lang := syntax.DetectLanguage(m.filename)
+	if lang != nil {
+		m.highlighter = syntax.New(lang)
+	} else {
+		m.highlighter = nil
+	}
+}
+
+// invalidateSyntaxCache invalidates syntax cache for modified lines.
+func (m *Model) invalidateSyntaxCache(lineNum int) {
+	if m.highlighter != nil {
+		m.highlighter.InvalidateFromLine(lineNum)
+	}
+}
+
+// setModified sets the modified flag and invalidates syntax cache.
+func (m *Model) setModified() {
+	m.modified = true
+	currentLine := m.buffer.CurrentLine()
+	m.invalidateSyntaxCache(currentLine)
 }
 
 // getSyntaxStyle returns the lipgloss style for a token type.
@@ -1779,7 +1808,7 @@ func (m *Model) cutSelection() {
 	})
 
 	m.clearSelection()
-	m.modified = true
+	m.setModified()
 	m.SetStatusMessage("Cut to clipboard")
 }
 
@@ -2155,8 +2184,8 @@ func (m *Model) renderEditor() string {
 				// Line has search matches
 				b.WriteString(m.renderLineWithSearchMatches(lineContent, m.searchQuery))
 			} else if m.syntaxHighlighting {
-				// Syntax highlighting
-				b.WriteString(m.renderLineWithSyntax(lineContent))
+				// Syntax highlighting with cache
+				b.WriteString(m.renderLineWithSyntax(lineNum, lineContent))
 			} else {
 				b.WriteString(editorStyle.Render(lineContent))
 			}

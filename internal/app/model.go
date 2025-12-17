@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/KilimcininKorOglu/gesh/internal/buffer"
+	"github.com/KilimcininKorOglu/gesh/internal/syntax"
 	"github.com/KilimcininKorOglu/gesh/internal/ui/styles"
 )
 
@@ -120,6 +121,9 @@ type Model struct {
 	cachedLines       map[int]string // line number -> rendered content
 	lastRenderVersion int            // buffer version at last render
 	dirtyLines        map[int]bool   // lines that need re-render
+
+	// Syntax highlighter (cached per model)
+	highlighter *syntax.Highlighter
 
 	// Status message
 	statusMessage string
@@ -314,10 +318,12 @@ func (m *Model) SetFilepath(path string) {
 		for i := len(path) - 1; i >= 0; i-- {
 			if path[i] == '/' || path[i] == '\\' {
 				m.filename = path[i+1:]
+				m.updateHighlighter()
 				return
 			}
 		}
 		m.filename = path
+		m.updateHighlighter()
 	}
 }
 
@@ -447,6 +453,7 @@ func (m *Model) syncFromActiveTab() {
 	m.searchQuery = tab.searchQuery
 	m.searchMatches = tab.searchMatches
 	m.searchIndex = tab.searchIndex
+	m.updateHighlighter() // Update highlighter for new tab
 
 	// Restore cursor position
 	if tab.cursorPos > 0 && tab.cursorPos <= m.buffer.Len() {
