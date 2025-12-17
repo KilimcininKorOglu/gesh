@@ -122,7 +122,6 @@ func scrollTick() tea.Cmd {
 
 // Init initializes the model.
 func (m *Model) Init() tea.Cmd {
-	// Always start ticker for file watching
 	return autoSaveTick()
 }
 
@@ -233,9 +232,16 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if m.mode == ModeQuit {
 		switch msg.String() {
 		case "y", "Y":
+			// Save and quit
+			m.saveFile()
 			m.quitting = true
 			return m, tea.Quit
-		case "n", "N", "esc":
+		case "n", "N":
+			// Quit without saving
+			m.quitting = true
+			return m, tea.Quit
+		case "esc":
+			// Cancel - go back to editing
 			m.mode = ModeNormal
 			m.SetStatusMessage("")
 			return m, nil
@@ -301,12 +307,13 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cutSelection()
 			return m, nil
 		}
-		// Otherwise exit
+		// Otherwise exit - only ask if actually modified
 		if m.modified {
 			m.mode = ModeQuit
 			m.SetStatusMessage("Save changes? (Y)es, (N)o, (Esc)Cancel")
 			return m, nil
 		}
+		// Not modified, just quit immediately
 		m.quitting = true
 		return m, tea.Quit
 
@@ -664,8 +671,21 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	default:
-		// Insert printable characters
-		if len(msg.Runes) > 0 {
+		// Insert printable characters only
+		// Ignore: modifier keys alone, control characters, non-printable
+		// Only accept KeyRunes type with actual printable runes
+		if msg.Type == tea.KeyRunes && len(msg.Runes) > 0 && !msg.Alt {
+			// Additional check: ensure runes are printable (>= space)
+			printable := true
+			for _, r := range msg.Runes {
+				if r < 32 { // Control characters
+					printable = false
+					break
+				}
+			}
+			if !printable {
+				return m, nil
+			}
 			if m.readonly {
 				m.SetStatusMessage("File is read-only")
 				return m, nil
@@ -2357,7 +2377,7 @@ func (m *Model) renderStatusBar() string {
 		modeInfo = " │ " + m.statusMessage
 	}
 
-	// Right-aligned mode
+	// Right-aligned mode indicator
 	rightInfo := "INS"
 	if m.overwriteMode {
 		rightInfo = "OVR"

@@ -57,6 +57,7 @@ func newEmptyTab() *Tab {
 		buffer:     buffer.New(),
 		history:    buffer.NewHistory(),
 		filename:   "[New File]",
+		modified:   false, // Explicitly set
 		encoding:   "UTF-8",
 		lineEnding: "LF",
 	}
@@ -69,6 +70,7 @@ func NewTabFromFile(filepath, filename, content, encoding, lineEnding string) *T
 		history:    buffer.NewHistory(),
 		filename:   filename,
 		filepath:   filepath,
+		modified:   false, // Explicitly set - file just loaded
 		encoding:   encoding,
 		lineEnding: lineEnding,
 	}
