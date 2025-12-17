@@ -3,6 +3,7 @@ package app
 
 import (
 	"github.com/KilimcininKorOglu/gesh/internal/buffer"
+	"github.com/KilimcininKorOglu/gesh/internal/ui/styles"
 )
 
 // Mode represents the current editor mode.
@@ -227,4 +228,15 @@ func (m *Model) GotoLine(line, col int) {
 	}
 
 	m.buffer.MoveTo(lineStart + col)
+}
+
+// SetTheme sets the editor theme by name.
+func SetTheme(name string) {
+	theme := styles.GetTheme(name)
+	applyTheme(theme)
+}
+
+// GetCurrentTheme returns the name of the current theme.
+func GetCurrentTheme() string {
+	return currentTheme.Name
 }

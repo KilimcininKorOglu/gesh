@@ -10,40 +10,60 @@ import (
 
 	"github.com/KilimcininKorOglu/gesh/internal/buffer"
 	"github.com/KilimcininKorOglu/gesh/internal/file"
+	"github.com/KilimcininKorOglu/gesh/internal/ui/styles"
 )
 
-// Styles for the UI components
+// Styles for the UI components (initialized with default theme)
 var (
+	currentTheme = styles.DarkTheme
+
+	headerStyle     lipgloss.Style
+	statusStyle     lipgloss.Style
+	helpStyle       lipgloss.Style
+	helpKeyStyle    lipgloss.Style
+	lineNumberStyle lipgloss.Style
+	editorStyle     lipgloss.Style
+	selectionStyle  lipgloss.Style
+)
+
+func init() {
+	applyTheme(currentTheme)
+}
+
+// applyTheme updates all styles based on the given theme.
+func applyTheme(theme styles.Theme) {
+	currentTheme = theme
+
 	headerStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#16213e")).
-			Foreground(lipgloss.Color("#e94560")).
-			Bold(true)
+		Background(theme.HeaderBg).
+		Foreground(theme.HeaderFg).
+		Bold(true)
 
 	statusStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#0f3460")).
-			Foreground(lipgloss.Color("#eaeaea"))
+		Background(theme.StatusBg).
+		Foreground(theme.StatusFg)
 
 	helpStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#16213e")).
-			Foreground(lipgloss.Color("#a0a0c0"))
+		Background(theme.HelpBg).
+		Foreground(theme.HelpFg)
 
 	helpKeyStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#16213e")).
-			Foreground(lipgloss.Color("#e94560")).
-			Bold(true)
+		Background(theme.HelpBg).
+		Foreground(theme.HelpKeyFg).
+		Bold(true)
 
 	lineNumberStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#4a4a6a")).
-			Width(4).
-			Align(lipgloss.Right)
+		Foreground(theme.LineNumberFg).
+		Width(4).
+		Align(lipgloss.Right)
 
 	editorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#eaeaea"))
+		Foreground(theme.EditorFg)
 
 	selectionStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#3a3a5a")).
-			Foreground(lipgloss.Color("#ffffff"))
-)
+		Background(theme.SelectionBg).
+		Foreground(theme.SelectionFg)
+}
 
 // Init initializes the model.
 func (m *Model) Init() tea.Cmd {
