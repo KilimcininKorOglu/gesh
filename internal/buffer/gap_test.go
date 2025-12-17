@@ -398,3 +398,161 @@ func TestInsertInMiddle(t *testing.T) {
 		t.Errorf("Len() = %d, want 5", gb.Len())
 	}
 }
+
+func TestRuneAt(t *testing.T) {
+	gb := NewFromString("Hello")
+
+	tests := []struct {
+		pos  int
+		want rune
+	}{
+		{0, 'H'},
+		{1, 'e'},
+		{4, 'o'},
+		{-1, 0},  // out of bounds
+		{5, 0},   // out of bounds
+		{100, 0}, // out of bounds
+	}
+
+	for _, tt := range tests {
+		got := gb.RuneAt(tt.pos)
+		if got != tt.want {
+			t.Errorf("RuneAt(%d) = %c, want %c", tt.pos, got, tt.want)
+		}
+	}
+}
+
+func TestRuneAtWithCursorInMiddle(t *testing.T) {
+	gb := NewFromString("Hello")
+
+	// Move cursor to middle (after "He")
+	gb.MoveTo(2)
+
+	// RuneAt should still work correctly regardless of cursor position
+	tests := []struct {
+		pos  int
+		want rune
+	}{
+		{0, 'H'},
+		{1, 'e'},
+		{2, 'l'},
+		{3, 'l'},
+		{4, 'o'},
+	}
+
+	for _, tt := range tests {
+		got := gb.RuneAt(tt.pos)
+		if got != tt.want {
+			t.Errorf("RuneAt(%d) with cursor at 2 = %c, want %c", tt.pos, got, tt.want)
+		}
+	}
+}
+
+func TestString(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{"empty", ""},
+		{"simple", "Hello"},
+		{"unicode", "Merhaba dünya"},
+		{"emoji", "Hello 🌍 World"},
+		{"multiline", "Line 1\nLine 2\nLine 3"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var gb *GapBuffer
+			if tt.input == "" {
+				gb = New()
+			} else {
+				gb = NewFromString(tt.input)
+			}
+
+			got := gb.String()
+			if got != tt.input {
+				t.Errorf("String() = %q, want %q", got, tt.input)
+			}
+		})
+	}
+}
+
+func TestStringAfterEdits(t *testing.T) {
+	gb := NewFromString("Hello")
+
+	// Delete last char
+	gb.Delete()
+
+	// Insert new chars
+	gb.InsertString(" World")
+
+	want := "Hell World"
+	got := gb.String()
+	if got != want {
+		t.Errorf("String() after edits = %q, want %q", got, want)
+	}
+}
+
+func TestStringWithCursorInMiddle(t *testing.T) {
+	gb := NewFromString("Hello World")
+
+	// Move cursor to middle
+	gb.MoveTo(5)
+
+	// String should return complete content
+	want := "Hello World"
+	got := gb.String()
+	if got != want {
+		t.Errorf("String() with cursor in middle = %q, want %q", got, want)
+	}
+}
+
+func TestSlice(t *testing.T) {
+	gb := NewFromString("Hello World")
+
+	tests := []struct {
+		name  string
+		start int
+		end   int
+		want  string
+	}{
+		{"full", 0, 11, "Hello World"},
+		{"first word", 0, 5, "Hello"},
+		{"second word", 6, 11, "World"},
+		{"middle", 2, 9, "llo Wor"},
+		{"single char", 0, 1, "H"},
+		{"empty range", 5, 5, ""},
+		{"negative start clamped", -5, 5, "Hello"},
+		{"end beyond length clamped", 6, 100, "World"},
+		{"invalid range", 10, 5, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := gb.Slice(tt.start, tt.end)
+			if got != tt.want {
+				t.Errorf("Slice(%d, %d) = %q, want %q", tt.start, tt.end, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSliceWithCursorInMiddle(t *testing.T) {
+	gb := NewFromString("Hello World")
+
+	// Move cursor to middle
+	gb.MoveTo(5)
+
+	// Slice should work regardless of cursor position
+	got := gb.Slice(0, 5)
+	want := "Hello"
+	if got != want {
+		t.Errorf("Slice(0, 5) with cursor at 5 = %q, want %q", got, want)
+	}
+
+	got = gb.Slice(6, 11)
+	want = "World"
+	if got != want {
+		t.Errorf("Slice(6, 11) with cursor at 5 = %q, want %q", got, want)
+	}
+}

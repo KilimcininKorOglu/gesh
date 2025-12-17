@@ -192,3 +192,56 @@ func (gb *GapBuffer) MoveToStart() {
 func (gb *GapBuffer) MoveToEnd() {
 	gb.MoveTo(gb.Len())
 }
+
+// RuneAt returns the rune at the specified position (0-indexed).
+// Returns 0 if position is out of bounds.
+func (gb *GapBuffer) RuneAt(pos int) rune {
+	if pos < 0 || pos >= gb.Len() {
+		return 0
+	}
+
+	// If position is before the gap, read directly
+	if pos < gb.gapStart {
+		return gb.data[pos]
+	}
+
+	// If position is at or after the gap, adjust for gap size
+	return gb.data[pos+gb.gapSize()]
+}
+
+// String returns the entire buffer content as a string.
+func (gb *GapBuffer) String() string {
+	result := make([]rune, gb.Len())
+
+	// Copy text before the gap
+	copy(result, gb.data[:gb.gapStart])
+
+	// Copy text after the gap
+	copy(result[gb.gapStart:], gb.data[gb.gapEnd:])
+
+	return string(result)
+}
+
+// Slice returns a substring from start to end position (exclusive).
+// Positions are clamped to valid range.
+func (gb *GapBuffer) Slice(start, end int) string {
+	textLen := gb.Len()
+
+	// Clamp positions
+	if start < 0 {
+		start = 0
+	}
+	if end > textLen {
+		end = textLen
+	}
+	if start >= end {
+		return ""
+	}
+
+	result := make([]rune, end-start)
+	for i := start; i < end; i++ {
+		result[i-start] = gb.RuneAt(i)
+	}
+
+	return string(result)
+}
