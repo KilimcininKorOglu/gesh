@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -231,9 +232,20 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "right", "ctrl+f":
 		m.clearSelection()
 		m.buffer.MoveRight()
-	case "home", "ctrl+a":
+	case "home":
 		m.clearSelection()
 		m.moveToLineStart()
+	case "ctrl+a":
+		// Double Ctrl+A = select all
+		now := time.Now().UnixMilli()
+		if now-m.lastCtrlATime < 500 {
+			m.selectAll()
+			m.lastCtrlATime = 0
+		} else {
+			m.clearSelection()
+			m.moveToLineStart()
+			m.lastCtrlATime = now
+		}
 	case "end", "ctrl+e":
 		m.clearSelection()
 		m.moveToLineEnd()
@@ -1004,6 +1016,15 @@ func (m *Model) clearSelection() {
 	m.selecting = false
 	m.selectionStart = 0
 	m.selectionEnd = 0
+}
+
+// selectAll selects all text in the buffer.
+func (m *Model) selectAll() {
+	m.selecting = true
+	m.selectionStart = 0
+	m.selectionEnd = m.buffer.Len()
+	m.buffer.MoveToEnd()
+	m.SetStatusMessage("All text selected")
 }
 
 // getSelectionBounds returns the start and end of selection in order.

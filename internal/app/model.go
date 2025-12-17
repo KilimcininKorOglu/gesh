@@ -64,6 +64,9 @@ type Model struct {
 	selectionStart int
 	selectionEnd   int
 
+	// Double Ctrl+A detection
+	lastCtrlATime int64
+
 	// Clipboard
 	clipboard string
 
