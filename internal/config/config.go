@@ -29,6 +29,7 @@ type EditorConfig struct {
 	TrimTrailingSpaces bool `yaml:"trim_trailing_spaces"`
 	FinalNewline       bool `yaml:"final_newline"`
 	CreateBackup       bool `yaml:"create_backup"`
+	AutoSaveInterval   int  `yaml:"auto_save_interval"` // seconds, 0 = disabled
 }
 
 // DefaultConfig returns the default configuration.
@@ -44,6 +45,7 @@ func DefaultConfig() *Config {
 			TrimTrailingSpaces: false,
 			FinalNewline:       false,
 			CreateBackup:       false,
+			AutoSaveInterval:   0, // disabled by default
 		},
 		Theme: "dark",
 	}

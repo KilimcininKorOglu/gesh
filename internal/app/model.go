@@ -2,6 +2,8 @@
 package app
 
 import (
+	"time"
+
 	"github.com/KilimcininKorOglu/gesh/internal/buffer"
 	"github.com/KilimcininKorOglu/gesh/internal/ui/styles"
 )
@@ -102,6 +104,10 @@ type Model struct {
 
 	// Macro recorder
 	macro *MacroRecorder
+
+	// Auto-save
+	autoSaveInterval int // seconds, 0 = disabled
+	lastSaveTime     int64
 
 	// Status message
 	statusMessage string
@@ -559,6 +565,30 @@ func (m *Model) ToggleOverwriteMode() {
 	} else {
 		m.SetStatusMessage("Insert mode")
 	}
+}
+
+// SetAutoSaveInterval sets the auto-save interval in seconds.
+func (m *Model) SetAutoSaveInterval(seconds int) {
+	m.autoSaveInterval = seconds
+}
+
+// GetAutoSaveInterval returns the auto-save interval in seconds.
+func (m *Model) GetAutoSaveInterval() int {
+	return m.autoSaveInterval
+}
+
+// ShouldAutoSave checks if auto-save should trigger now.
+func (m *Model) ShouldAutoSave() bool {
+	if m.autoSaveInterval <= 0 || !m.modified || m.filepath == "" {
+		return false
+	}
+	now := time.Now().Unix()
+	return now-m.lastSaveTime >= int64(m.autoSaveInterval)
+}
+
+// UpdateLastSaveTime updates the last save timestamp.
+func (m *Model) UpdateLastSaveTime() {
+	m.lastSaveTime = time.Now().Unix()
 }
 
 // IsSplit returns true if the view is split.

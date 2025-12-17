@@ -99,8 +99,22 @@ func applyTheme(theme styles.Theme) {
 	styles.UpdateTabStyles(theme)
 }
 
+// autoSaveTickMsg is sent periodically to check for auto-save.
+type autoSaveTickMsg struct{}
+
+// autoSaveTick returns a command that sends an autoSaveTickMsg after a delay.
+func autoSaveTick() tea.Cmd {
+	return tea.Tick(time.Second*5, func(t time.Time) tea.Msg {
+		return autoSaveTickMsg{}
+	})
+}
+
 // Init initializes the model.
 func (m *Model) Init() tea.Cmd {
+	// Start auto-save ticker if enabled
+	if m.autoSaveInterval > 0 {
+		return autoSaveTick()
+	}
 	return nil
 }
 
@@ -114,6 +128,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.SetSize(msg.Width, msg.Height)
 		return m, nil
+	case autoSaveTickMsg:
+		// Check if auto-save should trigger
+		if m.ShouldAutoSave() {
+			m.autoSave()
+		}
+		// Continue ticking
+		return m, autoSaveTick()
 	}
 	return m, nil
 }
@@ -809,6 +830,28 @@ func (m *Model) deleteLine() {
 	m.SetStatusMessage("Line deleted")
 }
 
+// autoSave performs an automatic save.
+func (m *Model) autoSave() {
+	if m.filepath == "" || !m.modified || m.readonly {
+		return
+	}
+
+	opts := file.SaveOptions{
+		TrimTrailingSpaces: m.trimTrailingSpaces,
+		FinalNewline:       m.finalNewline,
+		CreateBackup:       m.createBackup,
+	}
+	err := file.SaveWithOptions(m.filepath, m.Content(), opts)
+	if err != nil {
+		m.SetStatusMessage("Auto-save failed: " + err.Error())
+		return
+	}
+
+	m.modified = false
+	m.UpdateLastSaveTime()
+	m.SetStatusMessage("Auto-saved")
+}
+
 // playMacro plays back the recorded macro.
 func (m *Model) playMacro() (tea.Model, tea.Cmd) {
 	if !m.macro.Play() {
@@ -855,6 +898,7 @@ func (m *Model) saveFile() (tea.Model, tea.Cmd) {
 	}
 
 	m.modified = false
+	m.UpdateLastSaveTime()
 	m.SetStatusMessage("Saved: " + m.filename)
 	return m, nil
 }

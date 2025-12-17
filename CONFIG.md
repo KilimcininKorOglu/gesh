@@ -42,6 +42,9 @@ editor:
   
   # Create backup file (.bak) before saving
   create_backup: false
+  
+  # Auto-save interval in seconds (0 = disabled)
+  auto_save_interval: 0
 
 # Theme name: dark, light, monokai, dracula, gruvbox
 theme: dark
@@ -97,6 +100,11 @@ theme: dark
 - **Type:** Boolean
 - **Default:** `false`
 - **Description:** Create a backup file (.bak) before saving
+
+#### `auto_save_interval`
+- **Type:** Integer
+- **Default:** `0` (disabled)
+- **Description:** Auto-save interval in seconds. Set to 0 to disable.
 
 ---
 

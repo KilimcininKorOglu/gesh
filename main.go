@@ -166,6 +166,7 @@ func main() {
 	model.SetTrimTrailingSpaces(cfg.Editor.TrimTrailingSpaces)
 	model.SetFinalNewline(cfg.Editor.FinalNewline)
 	model.SetCreateBackup(cfg.Editor.CreateBackup)
+	model.SetAutoSaveInterval(cfg.Editor.AutoSaveInterval)
 
 	// Go to specific line/column if specified
 	if startLine > 0 {
