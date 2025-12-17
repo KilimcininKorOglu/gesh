@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/KilimcininKorOglu/gesh/internal/buffer"
 	"github.com/KilimcininKorOglu/gesh/internal/file"
 )
 
@@ -141,31 +142,118 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	// Editing
 	case "backspace":
-		if m.buffer.Delete() != 0 {
+		pos := m.buffer.CursorPos()
+		if r := m.buffer.Delete(); r != 0 {
+			m.history.Push(buffer.EditOperation{
+				Type:     buffer.OpDelete,
+				Position: pos - 1,
+				Text:     string(r),
+			})
 			m.modified = true
 		}
 	case "delete":
-		if m.buffer.DeleteForward() != 0 {
+		pos := m.buffer.CursorPos()
+		if r := m.buffer.DeleteForward(); r != 0 {
+			m.history.Push(buffer.EditOperation{
+				Type:     buffer.OpDelete,
+				Position: pos,
+				Text:     string(r),
+			})
 			m.modified = true
 		}
 	case "enter":
+		pos := m.buffer.CursorPos()
 		m.buffer.Insert('\n')
+		m.history.Push(buffer.EditOperation{
+			Type:     buffer.OpInsert,
+			Position: pos,
+			Text:     "\n",
+		})
 		m.modified = true
 	case "tab":
+		pos := m.buffer.CursorPos()
 		m.buffer.InsertString("    ")
+		m.history.Push(buffer.EditOperation{
+			Type:     buffer.OpInsert,
+			Position: pos,
+			Text:     "    ",
+		})
 		m.modified = true
+
+	case "ctrl+z":
+		m.undo()
+		return m, nil
+
+	case "ctrl+y":
+		m.redo()
+		return m, nil
 
 	default:
 		// Insert printable characters
 		if len(msg.Runes) > 0 {
+			pos := m.buffer.CursorPos()
+			text := string(msg.Runes)
 			for _, r := range msg.Runes {
 				m.buffer.Insert(r)
 			}
+			m.history.Push(buffer.EditOperation{
+				Type:     buffer.OpInsert,
+				Position: pos,
+				Text:     text,
+			})
 			m.modified = true
 		}
 	}
 
 	return m, nil
+}
+
+// undo reverses the last edit operation.
+func (m *Model) undo() {
+	op := m.history.Undo()
+	if op == nil {
+		m.SetStatusMessage("Nothing to undo")
+		return
+	}
+
+	// Reverse the operation
+	if op.Type == buffer.OpInsert {
+		// Undo insert: delete the text
+		m.buffer.MoveTo(op.Position)
+		for range []rune(op.Text) {
+			m.buffer.DeleteForward()
+		}
+	} else {
+		// Undo delete: insert the text
+		m.buffer.MoveTo(op.Position)
+		m.buffer.InsertString(op.Text)
+	}
+
+	m.SetStatusMessage("Undo")
+}
+
+// redo re-applies the last undone operation.
+func (m *Model) redo() {
+	op := m.history.Redo()
+	if op == nil {
+		m.SetStatusMessage("Nothing to redo")
+		return
+	}
+
+	// Re-apply the operation
+	if op.Type == buffer.OpInsert {
+		// Redo insert: insert the text
+		m.buffer.MoveTo(op.Position)
+		m.buffer.InsertString(op.Text)
+	} else {
+		// Redo delete: delete the text
+		m.buffer.MoveTo(op.Position)
+		for range []rune(op.Text) {
+			m.buffer.DeleteForward()
+		}
+	}
+
+	m.SetStatusMessage("Redo")
 }
 
 // moveCursorUp moves the cursor up one line.

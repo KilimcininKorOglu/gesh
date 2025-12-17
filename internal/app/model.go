@@ -24,7 +24,8 @@ const (
 // Model is the main Bubble Tea model for the editor.
 type Model struct {
 	// Buffer holds the text content.
-	buffer *buffer.GapBuffer
+	buffer  *buffer.GapBuffer
+	history *buffer.History
 
 	// File information
 	filename string
@@ -63,6 +64,7 @@ type Model struct {
 func New() *Model {
 	return &Model{
 		buffer:   buffer.New(),
+		history:  buffer.NewHistory(),
 		filename: "[New File]",
 		mode:     ModeNormal,
 	}
@@ -72,6 +74,7 @@ func New() *Model {
 func NewWithContent(content string) *Model {
 	return &Model{
 		buffer:   buffer.NewFromString(content),
+		history:  buffer.NewHistory(),
 		filename: "[New File]",
 		mode:     ModeNormal,
 	}
@@ -81,6 +84,7 @@ func NewWithContent(content string) *Model {
 func NewFromFile(filepath, filename, content string) *Model {
 	return &Model{
 		buffer:   buffer.NewFromString(content),
+		history:  buffer.NewHistory(),
 		filename: filename,
 		filepath: filepath,
 		mode:     ModeNormal,
