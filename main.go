@@ -18,6 +18,7 @@ func main() {
 	var filepath string
 	var startLine, startCol int
 	var readonly bool
+	var themeName string
 
 	// Parse arguments
 	args := os.Args[1:]
@@ -35,6 +36,20 @@ func main() {
 
 		case arg == "-r" || arg == "--readonly":
 			readonly = true
+
+		case arg == "-t" || arg == "--theme":
+			// Get theme name from next argument
+			if i+1 < len(args) {
+				i++
+				themeName = args[i]
+			} else {
+				fmt.Fprintln(os.Stderr, "Error: --theme requires a theme name")
+				fmt.Fprintln(os.Stderr, "Available themes: dark, light, monokai, dracula, gruvbox")
+				os.Exit(4)
+			}
+
+		case strings.HasPrefix(arg, "--theme="):
+			themeName = strings.TrimPrefix(arg, "--theme=")
 
 		case strings.HasPrefix(arg, "+"):
 			// Parse +N or +N:M
@@ -61,6 +76,11 @@ func main() {
 			fmt.Fprintln(os.Stderr, "Use --help for usage information")
 			os.Exit(4) // Exit code 4: Invalid argument
 		}
+	}
+
+	// Apply theme if specified
+	if themeName != "" {
+		app.SetTheme(themeName)
 	}
 
 	// Create the model
@@ -112,11 +132,12 @@ func printHelp() {
 	fmt.Println("Usage: gesh [options] [+line[:col]] [file]")
 	fmt.Println()
 	fmt.Println("Options:")
-	fmt.Println("  -h, --help       Show this help message")
-	fmt.Println("  -v, --version    Show version information")
-	fmt.Println("  -r, --readonly   Open file in read-only mode")
-	fmt.Println("  +N               Open at line N")
-	fmt.Println("  +N:M             Open at line N, column M")
+	fmt.Println("  -h, --help         Show this help message")
+	fmt.Println("  -v, --version      Show version information")
+	fmt.Println("  -r, --readonly     Open file in read-only mode")
+	fmt.Println("  -t, --theme NAME   Set color theme (dark, light, monokai, dracula, gruvbox)")
+	fmt.Println("  +N                 Open at line N")
+	fmt.Println("  +N:M               Open at line N, column M")
 	fmt.Println()
 	fmt.Println("Keyboard shortcuts:")
 	fmt.Println("  Ctrl+Alt+N  New file        Ctrl+O    Open file")
