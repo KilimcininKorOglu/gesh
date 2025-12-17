@@ -188,3 +188,36 @@ func (m *Model) SetFilepath(path string) {
 func (m *Model) Content() string {
 	return m.buffer.String()
 }
+
+// SetReadonly sets the readonly mode.
+func (m *Model) SetReadonly(readonly bool) {
+	m.readonly = readonly
+}
+
+// GotoLine moves cursor to specified line and column.
+func (m *Model) GotoLine(line, col int) {
+	// Convert to 0-indexed
+	line--
+	col--
+	if line < 0 {
+		line = 0
+	}
+	if col < 0 {
+		col = 0
+	}
+
+	maxLine := m.buffer.LineCount() - 1
+	if line > maxLine {
+		line = maxLine
+	}
+
+	lineStart := m.buffer.LineStart(line)
+	lineEnd := m.buffer.LineEnd(line)
+	lineLen := lineEnd - lineStart
+
+	if col > lineLen {
+		col = lineLen
+	}
+
+	m.buffer.MoveTo(lineStart + col)
+}

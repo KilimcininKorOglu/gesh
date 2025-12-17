@@ -5,6 +5,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -13,24 +15,53 @@ import (
 )
 
 func main() {
-	// Handle version flag
-	if len(os.Args) > 1 && (os.Args[1] == "-v" || os.Args[1] == "--version") {
-		fmt.Println(version.Full())
-		os.Exit(0)
-	}
+	var filepath string
+	var startLine, startCol int
+	var readonly bool
 
-	// Handle help flag
-	if len(os.Args) > 1 && (os.Args[1] == "-h" || os.Args[1] == "--help") {
-		printHelp()
-		os.Exit(0)
+	// Parse arguments
+	args := os.Args[1:]
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+
+		switch {
+		case arg == "-v" || arg == "--version":
+			fmt.Println(version.Full())
+			os.Exit(0)
+
+		case arg == "-h" || arg == "--help":
+			printHelp()
+			os.Exit(0)
+
+		case arg == "-r" || arg == "--readonly":
+			readonly = true
+
+		case strings.HasPrefix(arg, "+"):
+			// Parse +N or +N:M
+			pos := arg[1:]
+			if strings.Contains(pos, ":") {
+				parts := strings.SplitN(pos, ":", 2)
+				if line, err := strconv.Atoi(parts[0]); err == nil {
+					startLine = line
+				}
+				if col, err := strconv.Atoi(parts[1]); err == nil {
+					startCol = col
+				}
+			} else {
+				if line, err := strconv.Atoi(pos); err == nil {
+					startLine = line
+				}
+			}
+
+		case !strings.HasPrefix(arg, "-"):
+			filepath = arg
+		}
 	}
 
 	// Create the model
 	var model *app.Model
 
-	if len(os.Args) > 1 {
-		// Open file from argument
-		filepath := os.Args[1]
+	if filepath != "" {
 		content, err := os.ReadFile(filepath)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -48,6 +79,16 @@ func main() {
 		model = app.New()
 	}
 
+	// Set readonly mode
+	if readonly {
+		model.SetReadonly(true)
+	}
+
+	// Go to specific line/column if specified
+	if startLine > 0 {
+		model.GotoLine(startLine, startCol)
+	}
+
 	// Create and run the program
 	p := tea.NewProgram(model, tea.WithAltScreen())
 
@@ -58,24 +99,36 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Println("Gesh - A minimal TUI text editor")
+	fmt.Println("Gesh (𒄑) - A minimal TUI text editor")
 	fmt.Println()
-	fmt.Println("Usage: gesh [options] [file]")
+	fmt.Println("Usage: gesh [options] [+line[:col]] [file]")
 	fmt.Println()
 	fmt.Println("Options:")
-	fmt.Println("  -h, --help     Show this help message")
-	fmt.Println("  -v, --version  Show version information")
+	fmt.Println("  -h, --help       Show this help message")
+	fmt.Println("  -v, --version    Show version information")
+	fmt.Println("  -r, --readonly   Open file in read-only mode")
+	fmt.Println("  +N               Open at line N")
+	fmt.Println("  +N:M             Open at line N, column M")
 	fmt.Println()
 	fmt.Println("Keyboard shortcuts:")
-	fmt.Println("  Ctrl+X    Exit")
-	fmt.Println("  Ctrl+S    Save (not yet implemented)")
-	fmt.Println("  Ctrl+W    Search (not yet implemented)")
-	fmt.Println("  Ctrl+G    Go to line (not yet implemented)")
+	fmt.Println("  Ctrl+N    New file          Ctrl+O    Open file")
+	fmt.Println("  Ctrl+S    Save              Ctrl+X    Exit")
+	fmt.Println("  Ctrl+Z    Undo              Ctrl+Y    Redo")
+	fmt.Println("  Ctrl+W    Search            Ctrl+R    Replace")
+	fmt.Println("  Ctrl+G    Go to line        Ctrl+K    Delete line")
+	fmt.Println("  Ctrl+U    Cut line          Ctrl+V    Paste")
+	fmt.Println("  Ctrl+C    Copy/Quit")
 	fmt.Println()
 	fmt.Println("Navigation:")
-	fmt.Println("  Arrow keys     Move cursor")
-	fmt.Println("  Home/End       Start/end of line")
-	fmt.Println("  Ctrl+A/E       Start/end of line")
+	fmt.Println("  Arrow keys       Move cursor")
+	fmt.Println("  Ctrl+Left/Right  Move by word")
+	fmt.Println("  Home/End         Start/end of line")
+	fmt.Println("  Ctrl+Home/End    Start/end of file")
+	fmt.Println("  PageUp/PageDown  Page navigation")
 	fmt.Println()
-	fmt.Println("For more information, visit: https://github.com/KilimcininKorOglu/gesh")
+	fmt.Println("Selection:")
+	fmt.Println("  Ctrl+Space       Toggle selection")
+	fmt.Println("  Shift+Arrows     Select text")
+	fmt.Println()
+	fmt.Println("For more information: https://github.com/KilimcininKorOglu/gesh")
 }

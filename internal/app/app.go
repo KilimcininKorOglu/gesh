@@ -244,8 +244,12 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.clearSelection()
 		m.pageDown()
 
-	// Editing
+	// Editing (check readonly)
 	case "backspace":
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+			return m, nil
+		}
 		pos := m.buffer.CursorPos()
 		if r := m.buffer.Delete(); r != 0 {
 			m.history.Push(buffer.EditOperation{
@@ -256,6 +260,10 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.modified = true
 		}
 	case "delete":
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+			return m, nil
+		}
 		pos := m.buffer.CursorPos()
 		if r := m.buffer.DeleteForward(); r != 0 {
 			m.history.Push(buffer.EditOperation{
@@ -266,6 +274,10 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.modified = true
 		}
 	case "enter":
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+			return m, nil
+		}
 		pos := m.buffer.CursorPos()
 		m.buffer.Insert('\n')
 		m.history.Push(buffer.EditOperation{
@@ -275,6 +287,10 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		})
 		m.modified = true
 	case "tab":
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+			return m, nil
+		}
 		pos := m.buffer.CursorPos()
 		m.buffer.InsertString("    ")
 		m.history.Push(buffer.EditOperation{
@@ -293,12 +309,20 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "ctrl+k":
+		if m.readonly {
+			m.SetStatusMessage("File is read-only")
+			return m, nil
+		}
 		m.deleteLine()
 		return m, nil
 
 	default:
 		// Insert printable characters
 		if len(msg.Runes) > 0 {
+			if m.readonly {
+				m.SetStatusMessage("File is read-only")
+				return m, nil
+			}
 			pos := m.buffer.CursorPos()
 			text := string(msg.Runes)
 			for _, r := range msg.Runes {
