@@ -139,6 +139,14 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.moveToLineStart()
 	case "end", "ctrl+e":
 		m.moveToLineEnd()
+	case "ctrl+home":
+		m.buffer.MoveToStart()
+	case "ctrl+end":
+		m.buffer.MoveToEnd()
+	case "pgup":
+		m.pageUp()
+	case "pgdown":
+		m.pageDown()
 
 	// Editing
 	case "backspace":
@@ -310,6 +318,45 @@ func (m *Model) moveToLineEnd() {
 	currentLine := m.buffer.CurrentLine()
 	lineEnd := m.buffer.LineEnd(currentLine)
 	m.buffer.MoveTo(lineEnd)
+}
+
+// pageUp moves the cursor up by a page.
+func (m *Model) pageUp() {
+	visibleLines := m.height - 3
+	if visibleLines < 1 {
+		visibleLines = 1
+	}
+
+	currentLine := m.buffer.CurrentLine()
+	targetLine := currentLine - visibleLines
+	if targetLine < 0 {
+		targetLine = 0
+	}
+
+	lineStart := m.buffer.LineStart(targetLine)
+	if lineStart >= 0 {
+		m.buffer.MoveTo(lineStart)
+	}
+}
+
+// pageDown moves the cursor down by a page.
+func (m *Model) pageDown() {
+	visibleLines := m.height - 3
+	if visibleLines < 1 {
+		visibleLines = 1
+	}
+
+	currentLine := m.buffer.CurrentLine()
+	maxLine := m.buffer.LineCount() - 1
+	targetLine := currentLine + visibleLines
+	if targetLine > maxLine {
+		targetLine = maxLine
+	}
+
+	lineStart := m.buffer.LineStart(targetLine)
+	if lineStart >= 0 {
+		m.buffer.MoveTo(lineStart)
+	}
 }
 
 // saveFile saves the buffer to file.
