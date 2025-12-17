@@ -556,3 +556,211 @@ func TestSliceWithCursorInMiddle(t *testing.T) {
 		t.Errorf("Slice(6, 11) with cursor at 5 = %q, want %q", got, want)
 	}
 }
+
+func TestLineCount(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  int
+	}{
+		{"empty", "", 1},
+		{"single line", "Hello", 1},
+		{"two lines", "Hello\nWorld", 2},
+		{"three lines", "Line 1\nLine 2\nLine 3", 3},
+		{"trailing newline", "Hello\n", 2},
+		{"empty lines", "\n\n\n", 4},
+		{"mixed", "A\n\nB\n", 4},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var gb *GapBuffer
+			if tt.input == "" {
+				gb = New()
+			} else {
+				gb = NewFromString(tt.input)
+			}
+
+			got := gb.LineCount()
+			if got != tt.want {
+				t.Errorf("LineCount() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLineStart(t *testing.T) {
+	gb := NewFromString("Line 1\nLine 2\nLine 3")
+	// Positions:
+	// Line 1: 0-5 (6 chars), newline at 6
+	// Line 2: 7-12 (6 chars), newline at 13
+	// Line 3: 14-19 (6 chars)
+
+	tests := []struct {
+		line int
+		want int
+	}{
+		{0, 0},
+		{1, 7},
+		{2, 14},
+		{-1, -1}, // invalid
+		{3, -1},  // beyond last line
+		{100, -1},
+	}
+
+	for _, tt := range tests {
+		got := gb.LineStart(tt.line)
+		if got != tt.want {
+			t.Errorf("LineStart(%d) = %d, want %d", tt.line, got, tt.want)
+		}
+	}
+}
+
+func TestLineEnd(t *testing.T) {
+	gb := NewFromString("Line 1\nLine 2\nLine 3")
+	// Line 1: ends at 6 (newline position)
+	// Line 2: ends at 13 (newline position)
+	// Line 3: ends at 20 (end of buffer)
+
+	tests := []struct {
+		line int
+		want int
+	}{
+		{0, 6},
+		{1, 13},
+		{2, 20}, // end of buffer
+		{-1, -1},
+		{3, -1},
+	}
+
+	for _, tt := range tests {
+		got := gb.LineEnd(tt.line)
+		if got != tt.want {
+			t.Errorf("LineEnd(%d) = %d, want %d", tt.line, got, tt.want)
+		}
+	}
+}
+
+func TestCurrentLine(t *testing.T) {
+	gb := NewFromString("Line 1\nLine 2\nLine 3")
+
+	tests := []struct {
+		cursorPos int
+		wantLine  int
+	}{
+		{0, 0},  // start of line 1
+		{3, 0},  // middle of line 1
+		{6, 0},  // at newline (still line 1)
+		{7, 1},  // start of line 2
+		{10, 1}, // middle of line 2
+		{14, 2}, // start of line 3
+		{20, 2}, // end of buffer
+	}
+
+	for _, tt := range tests {
+		gb.MoveTo(tt.cursorPos)
+		got := gb.CurrentLine()
+		if got != tt.wantLine {
+			t.Errorf("CurrentLine() with cursor at %d = %d, want %d", tt.cursorPos, got, tt.wantLine)
+		}
+	}
+}
+
+func TestCurrentColumn(t *testing.T) {
+	gb := NewFromString("Line 1\nLine 2\nLine 3")
+
+	tests := []struct {
+		cursorPos  int
+		wantColumn int
+	}{
+		{0, 0},  // start of line 1
+		{3, 3},  // middle of line 1
+		{6, 6},  // at newline
+		{7, 0},  // start of line 2
+		{10, 3}, // middle of line 2
+		{14, 0}, // start of line 3
+		{17, 3}, // middle of line 3
+	}
+
+	for _, tt := range tests {
+		gb.MoveTo(tt.cursorPos)
+		got := gb.CurrentColumn()
+		if got != tt.wantColumn {
+			t.Errorf("CurrentColumn() with cursor at %d = %d, want %d", tt.cursorPos, got, tt.wantColumn)
+		}
+	}
+}
+
+func TestLine(t *testing.T) {
+	gb := NewFromString("Line 1\nLine 2\nLine 3")
+
+	tests := []struct {
+		line int
+		want string
+	}{
+		{0, "Line 1"},
+		{1, "Line 2"},
+		{2, "Line 3"},
+		{-1, ""},
+		{3, ""},
+		{100, ""},
+	}
+
+	for _, tt := range tests {
+		got := gb.Line(tt.line)
+		if got != tt.want {
+			t.Errorf("Line(%d) = %q, want %q", tt.line, got, tt.want)
+		}
+	}
+}
+
+func TestLineWithEmptyLines(t *testing.T) {
+	gb := NewFromString("A\n\nB")
+	// Line 0: "A"
+	// Line 1: "" (empty)
+	// Line 2: "B"
+
+	tests := []struct {
+		line int
+		want string
+	}{
+		{0, "A"},
+		{1, ""},
+		{2, "B"},
+	}
+
+	for _, tt := range tests {
+		got := gb.Line(tt.line)
+		if got != tt.want {
+			t.Errorf("Line(%d) = %q, want %q", tt.line, got, tt.want)
+		}
+	}
+}
+
+func TestLineOperationsWithCursorInMiddle(t *testing.T) {
+	gb := NewFromString("Hello\nWorld")
+
+	// Move cursor to middle of first line
+	gb.MoveTo(2)
+
+	// Line operations should still work correctly
+	if gb.LineCount() != 2 {
+		t.Errorf("LineCount() = %d, want 2", gb.LineCount())
+	}
+
+	if gb.Line(0) != "Hello" {
+		t.Errorf("Line(0) = %q, want %q", gb.Line(0), "Hello")
+	}
+
+	if gb.Line(1) != "World" {
+		t.Errorf("Line(1) = %q, want %q", gb.Line(1), "World")
+	}
+
+	if gb.CurrentLine() != 0 {
+		t.Errorf("CurrentLine() = %d, want 0", gb.CurrentLine())
+	}
+
+	if gb.CurrentColumn() != 2 {
+		t.Errorf("CurrentColumn() = %d, want 2", gb.CurrentColumn())
+	}
+}

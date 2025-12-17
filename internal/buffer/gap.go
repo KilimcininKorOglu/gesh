@@ -245,3 +245,118 @@ func (gb *GapBuffer) Slice(start, end int) string {
 
 	return string(result)
 }
+
+// LineCount returns the total number of lines in the buffer.
+// An empty buffer has 1 line. Each newline character adds a line.
+func (gb *GapBuffer) LineCount() int {
+	count := 1
+	textLen := gb.Len()
+
+	for i := 0; i < textLen; i++ {
+		if gb.RuneAt(i) == '\n' {
+			count++
+		}
+	}
+
+	return count
+}
+
+// LineStart returns the position (0-indexed) of the first character
+// of the specified line (0-indexed). Returns -1 if line is out of bounds.
+func (gb *GapBuffer) LineStart(line int) int {
+	if line < 0 {
+		return -1
+	}
+
+	if line == 0 {
+		return 0
+	}
+
+	currentLine := 0
+	textLen := gb.Len()
+
+	for i := 0; i < textLen; i++ {
+		if gb.RuneAt(i) == '\n' {
+			currentLine++
+			if currentLine == line {
+				return i + 1
+			}
+		}
+	}
+
+	// Line number beyond last line
+	return -1
+}
+
+// LineEnd returns the position (0-indexed) of the last character
+// of the specified line (0-indexed), excluding the newline.
+// Returns -1 if line is out of bounds.
+func (gb *GapBuffer) LineEnd(line int) int {
+	if line < 0 {
+		return -1
+	}
+
+	start := gb.LineStart(line)
+	if start == -1 {
+		return -1
+	}
+
+	textLen := gb.Len()
+
+	// Find the next newline or end of buffer
+	for i := start; i < textLen; i++ {
+		if gb.RuneAt(i) == '\n' {
+			return i
+		}
+	}
+
+	// Last line - return end of buffer
+	return textLen
+}
+
+// CurrentLine returns the line number (0-indexed) where the cursor is located.
+func (gb *GapBuffer) CurrentLine() int {
+	line := 0
+	cursorPos := gb.CursorPos()
+
+	for i := 0; i < cursorPos; i++ {
+		if gb.RuneAt(i) == '\n' {
+			line++
+		}
+	}
+
+	return line
+}
+
+// CurrentColumn returns the column number (0-indexed) where the cursor is located.
+// Column is the distance from the start of the current line.
+func (gb *GapBuffer) CurrentColumn() int {
+	cursorPos := gb.CursorPos()
+
+	// Find the start of the current line
+	lineStart := 0
+	for i := cursorPos - 1; i >= 0; i-- {
+		if gb.RuneAt(i) == '\n' {
+			lineStart = i + 1
+			break
+		}
+	}
+
+	return cursorPos - lineStart
+}
+
+// Line returns the content of the specified line (0-indexed), excluding newline.
+// Returns empty string if line is out of bounds.
+func (gb *GapBuffer) Line(line int) string {
+	start := gb.LineStart(line)
+	if start == -1 {
+		return ""
+	}
+
+	end := gb.LineEnd(line)
+	if end == -1 {
+		return ""
+	}
+
+	return gb.Slice(start, end)
+}
