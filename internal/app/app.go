@@ -17,13 +17,14 @@ import (
 var (
 	currentTheme = styles.DarkTheme
 
-	headerStyle     lipgloss.Style
-	statusStyle     lipgloss.Style
-	helpStyle       lipgloss.Style
-	helpKeyStyle    lipgloss.Style
-	lineNumberStyle lipgloss.Style
-	editorStyle     lipgloss.Style
-	selectionStyle  lipgloss.Style
+	headerStyle      lipgloss.Style
+	statusStyle      lipgloss.Style
+	helpStyle        lipgloss.Style
+	helpKeyStyle     lipgloss.Style
+	lineNumberStyle  lipgloss.Style
+	editorStyle      lipgloss.Style
+	selectionStyle   lipgloss.Style
+	searchMatchStyle lipgloss.Style
 )
 
 func init() {
@@ -63,6 +64,10 @@ func applyTheme(theme styles.Theme) {
 	selectionStyle = lipgloss.NewStyle().
 		Background(theme.SelectionBg).
 		Foreground(theme.SelectionFg)
+
+	searchMatchStyle = lipgloss.NewStyle().
+		Background(lipgloss.Color("#ffff00")).
+		Foreground(lipgloss.Color("#000000"))
 }
 
 // Init initializes the model.
@@ -1215,6 +1220,27 @@ func isSpace(r rune) bool {
 	return r == ' ' || r == '\t' || r == '\n' || r == '\r'
 }
 
+// renderLineWithSearchMatches renders a line with search matches highlighted.
+func (m *Model) renderLineWithSearchMatches(line, query string) string {
+	var result strings.Builder
+	pos := 0
+	for {
+		idx := strings.Index(line[pos:], query)
+		if idx == -1 {
+			result.WriteString(editorStyle.Render(line[pos:]))
+			break
+		}
+		// Text before match
+		if idx > 0 {
+			result.WriteString(editorStyle.Render(line[pos : pos+idx]))
+		}
+		// Highlighted match
+		result.WriteString(searchMatchStyle.Render(query))
+		pos = pos + idx + len(query)
+	}
+	return result.String()
+}
+
 // wrapLine wraps a line to fit within the given width.
 func wrapLine(line string, width int) string {
 	runes := []rune(line)
@@ -1592,6 +1618,9 @@ func (m *Model) renderEditor() string {
 			} else if hasSelection && lineEnd > selStart && lineStart < selEnd {
 				// Line has selection
 				b.WriteString(m.renderLineWithSelection(runes, lineStart, lineEnd, selStart, selEnd, -1))
+			} else if m.searchQuery != "" && strings.Contains(lineContent, m.searchQuery) {
+				// Line has search matches
+				b.WriteString(m.renderLineWithSearchMatches(lineContent, m.searchQuery))
 			} else {
 				b.WriteString(editorStyle.Render(lineContent))
 			}
