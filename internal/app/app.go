@@ -319,12 +319,21 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.SetStatusMessage("File is read-only")
 			return m, nil
 		}
+		// Get current line's indentation
+		currentLine := m.buffer.CurrentLine()
+		lineContent := m.buffer.Line(currentLine)
+		indent := getIndent(lineContent)
+
 		pos := m.buffer.CursorPos()
+		insertText := "\n" + indent
 		m.buffer.Insert('\n')
+		if indent != "" {
+			m.buffer.InsertString(indent)
+		}
 		m.history.Push(buffer.EditOperation{
 			Type:     buffer.OpInsert,
 			Position: pos,
-			Text:     "\n",
+			Text:     insertText,
 		})
 		m.modified = true
 	case "tab":
@@ -1115,6 +1124,19 @@ func (m *Model) moveWordRight() {
 // isSpace checks if a rune is a whitespace character.
 func isSpace(r rune) bool {
 	return r == ' ' || r == '\t' || r == '\n' || r == '\r'
+}
+
+// getIndent extracts leading whitespace from a line.
+func getIndent(line string) string {
+	var indent strings.Builder
+	for _, r := range line {
+		if r == ' ' || r == '\t' {
+			indent.WriteRune(r)
+		} else {
+			break
+		}
+	}
+	return indent.String()
 }
 
 // toggleSelection toggles selection mode.
