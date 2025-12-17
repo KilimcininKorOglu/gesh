@@ -27,6 +27,12 @@ type Theme struct {
 	CursorBg     lipgloss.Color
 	ModifiedFlag lipgloss.Color
 	LogoColor    lipgloss.Color
+
+	// Tab bar colors
+	TabActiveBg   lipgloss.Color
+	TabActiveFg   lipgloss.Color
+	TabInactiveBg lipgloss.Color
+	TabInactiveFg lipgloss.Color
 }
 
 // DarkTheme is the default dark theme.
@@ -50,6 +56,11 @@ var DarkTheme = Theme{
 	CursorBg:     lipgloss.Color("#ffffff"),
 	ModifiedFlag: lipgloss.Color("#ff6b6b"),
 	LogoColor:    lipgloss.Color("#e94560"),
+
+	TabActiveBg:   lipgloss.Color("#0f3460"),
+	TabActiveFg:   lipgloss.Color("#e94560"),
+	TabInactiveBg: lipgloss.Color("#1a1a2e"),
+	TabInactiveFg: lipgloss.Color("#6a6a8a"),
 }
 
 // LightTheme is a light theme.
@@ -73,6 +84,11 @@ var LightTheme = Theme{
 	CursorBg:     lipgloss.Color("#000000"),
 	ModifiedFlag: lipgloss.Color("#e74c3c"),
 	LogoColor:    lipgloss.Color("#c0392b"),
+
+	TabActiveBg:   lipgloss.Color("#e8e8e8"),
+	TabActiveFg:   lipgloss.Color("#c0392b"),
+	TabInactiveBg: lipgloss.Color("#d0d0d0"),
+	TabInactiveFg: lipgloss.Color("#808080"),
 }
 
 // MonokaiTheme is a Monokai-inspired theme.
@@ -96,6 +112,11 @@ var MonokaiTheme = Theme{
 	CursorBg:     lipgloss.Color("#f8f8f2"),
 	ModifiedFlag: lipgloss.Color("#f92672"),
 	LogoColor:    lipgloss.Color("#66d9ef"),
+
+	TabActiveBg:   lipgloss.Color("#3e3d32"),
+	TabActiveFg:   lipgloss.Color("#f92672"),
+	TabInactiveBg: lipgloss.Color("#272822"),
+	TabInactiveFg: lipgloss.Color("#75715e"),
 }
 
 // DraculaTheme is a Dracula-inspired theme.
@@ -119,6 +140,11 @@ var DraculaTheme = Theme{
 	CursorBg:     lipgloss.Color("#f8f8f2"),
 	ModifiedFlag: lipgloss.Color("#ff5555"),
 	LogoColor:    lipgloss.Color("#bd93f9"),
+
+	TabActiveBg:   lipgloss.Color("#44475a"),
+	TabActiveFg:   lipgloss.Color("#ff79c6"),
+	TabInactiveBg: lipgloss.Color("#282a36"),
+	TabInactiveFg: lipgloss.Color("#6272a4"),
 }
 
 // GruvboxTheme is a Gruvbox-inspired theme.
@@ -142,6 +168,11 @@ var GruvboxTheme = Theme{
 	CursorBg:     lipgloss.Color("#ebdbb2"),
 	ModifiedFlag: lipgloss.Color("#fb4934"),
 	LogoColor:    lipgloss.Color("#fabd2f"),
+
+	TabActiveBg:   lipgloss.Color("#504945"),
+	TabActiveFg:   lipgloss.Color("#fe8019"),
+	TabInactiveBg: lipgloss.Color("#3c3836"),
+	TabInactiveFg: lipgloss.Color("#928374"),
 }
 
 // BuiltinThemes contains all built-in themes.
@@ -168,4 +199,28 @@ func ListThemes() []string {
 		names = append(names, name)
 	}
 	return names
+}
+
+// Tab styles (will be updated when theme changes)
+var (
+	TabActiveStyle = lipgloss.NewStyle().
+			Background(DarkTheme.TabActiveBg).
+			Foreground(DarkTheme.TabActiveFg).
+			Bold(true)
+
+	TabInactiveStyle = lipgloss.NewStyle().
+				Background(DarkTheme.TabInactiveBg).
+				Foreground(DarkTheme.TabInactiveFg)
+)
+
+// UpdateTabStyles updates tab styles for the given theme.
+func UpdateTabStyles(theme Theme) {
+	TabActiveStyle = lipgloss.NewStyle().
+		Background(theme.TabActiveBg).
+		Foreground(theme.TabActiveFg).
+		Bold(true)
+
+	TabInactiveStyle = lipgloss.NewStyle().
+		Background(theme.TabInactiveBg).
+		Foreground(theme.TabInactiveFg)
 }

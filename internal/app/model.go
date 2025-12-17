@@ -34,11 +34,14 @@ const (
 
 // Model is the main Bubble Tea model for the editor.
 type Model struct {
-	// Buffer holds the text content.
+	// Tab management (multi-buffer support)
+	tabs *TabManager
+
+	// Buffer holds the text content (shortcut to active tab's buffer)
 	buffer  *buffer.GapBuffer
 	history *buffer.History
 
-	// File information
+	// File information (shortcut to active tab)
 	filename   string
 	filepath   string
 	modified   bool
@@ -50,6 +53,7 @@ type Model struct {
 	showLineNumbers    bool
 	wordWrap           bool
 	syntaxHighlighting bool
+	showTabs           bool // show tab bar
 
 	// Save options
 	trimTrailingSpaces bool
@@ -99,59 +103,82 @@ type Model struct {
 
 // New creates a new editor model with an empty buffer.
 func New() *Model {
+	tabs := NewTabManager()
+	tab := tabs.ActiveTab()
 	return &Model{
-		buffer:             buffer.New(),
-		history:            buffer.NewHistory(),
-		filename:           "[New File]",
-		encoding:           "UTF-8",
-		lineEnding:         "LF",
+		tabs:               tabs,
+		buffer:             tab.buffer,
+		history:            tab.history,
+		filename:           tab.filename,
+		encoding:           tab.encoding,
+		lineEnding:         tab.lineEnding,
 		mode:               ModeNormal,
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
+		showTabs:           true,
 	}
 }
 
 // NewWithContent creates a new editor model with initial content.
 func NewWithContent(content string) *Model {
+	tabs := NewTabManager()
+	tab := tabs.ActiveTab()
+	tab.buffer = buffer.NewFromString(content)
 	return &Model{
-		buffer:             buffer.NewFromString(content),
-		history:            buffer.NewHistory(),
-		filename:           "[New File]",
-		encoding:           "UTF-8",
-		lineEnding:         "LF",
+		tabs:               tabs,
+		buffer:             tab.buffer,
+		history:            tab.history,
+		filename:           tab.filename,
+		encoding:           tab.encoding,
+		lineEnding:         tab.lineEnding,
 		mode:               ModeNormal,
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
+		showTabs:           true,
 	}
 }
 
 // NewFromFile creates a new editor model for a specific file.
 func NewFromFile(filepath, filename, content string) *Model {
+	tabs := &TabManager{
+		tabs: []*Tab{NewTabFromFile(filepath, filename, content, "UTF-8", "LF")},
+		activeIndex: 0,
+	}
+	tab := tabs.ActiveTab()
 	return &Model{
-		buffer:             buffer.NewFromString(content),
-		history:            buffer.NewHistory(),
-		filename:           filename,
-		filepath:           filepath,
-		encoding:           "UTF-8",
-		lineEnding:         "LF",
+		tabs:               tabs,
+		buffer:             tab.buffer,
+		history:            tab.history,
+		filename:           tab.filename,
+		filepath:           tab.filepath,
+		encoding:           tab.encoding,
+		lineEnding:         tab.lineEnding,
 		mode:               ModeNormal,
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
+		showTabs:           true,
 	}
 }
 
 // NewFromFileWithInfo creates a new editor model with file metadata.
 func NewFromFileWithInfo(filepath, filename, content, encoding, lineEnding string) *Model {
+	tabs := &TabManager{
+		tabs: []*Tab{NewTabFromFile(filepath, filename, content, encoding, lineEnding)},
+		activeIndex: 0,
+	}
+	tab := tabs.ActiveTab()
 	return &Model{
-		buffer:             buffer.NewFromString(content),
-		history:            buffer.NewHistory(),
-		filename:           filename,
-		filepath:           filepath,
-		encoding:           encoding,
-		lineEnding:         lineEnding,
+		tabs:               tabs,
+		buffer:             tab.buffer,
+		history:            tab.history,
+		filename:           tab.filename,
+		filepath:           tab.filepath,
+		encoding:           tab.encoding,
+		lineEnding:         tab.lineEnding,
 		mode:               ModeNormal,
 		showLineNumbers:    true,
 		syntaxHighlighting: true,
+		showTabs:           true,
 	}
 }
 
@@ -343,4 +370,156 @@ func (m *Model) SetFinalNewline(add bool) {
 // SetCreateBackup sets whether to create backup files on save.
 func (m *Model) SetCreateBackup(backup bool) {
 	m.createBackup = backup
+}
+
+// TabCount returns the number of open tabs.
+func (m *Model) TabCount() int {
+	return m.tabs.Count()
+}
+
+// ActiveTabIndex returns the index of the active tab.
+func (m *Model) ActiveTabIndex() int {
+	return m.tabs.ActiveIndex()
+}
+
+// syncFromActiveTab updates model fields from the active tab.
+func (m *Model) syncFromActiveTab() {
+	tab := m.tabs.ActiveTab()
+	if tab == nil {
+		return
+	}
+	m.buffer = tab.buffer
+	m.history = tab.history
+	m.filename = tab.filename
+	m.filepath = tab.filepath
+	m.encoding = tab.encoding
+	m.lineEnding = tab.lineEnding
+	m.modified = tab.modified
+	m.readonly = tab.readonly
+	m.viewportTopLine = tab.viewportTopLine
+	m.viewportLeftColumn = tab.viewportLeftColumn
+	m.selecting = tab.selecting
+	m.selectionStart = tab.selectionStart
+	m.selectionEnd = tab.selectionEnd
+	m.searchQuery = tab.searchQuery
+	m.searchMatches = tab.searchMatches
+	m.searchIndex = tab.searchIndex
+
+	// Restore cursor position
+	if tab.cursorPos > 0 && tab.cursorPos <= m.buffer.Len() {
+		m.buffer.MoveTo(tab.cursorPos)
+	}
+}
+
+// syncToActiveTab saves model fields to the active tab.
+func (m *Model) syncToActiveTab() {
+	tab := m.tabs.ActiveTab()
+	if tab == nil {
+		return
+	}
+	tab.buffer = m.buffer
+	tab.history = m.history
+	tab.filename = m.filename
+	tab.filepath = m.filepath
+	tab.encoding = m.encoding
+	tab.lineEnding = m.lineEnding
+	tab.modified = m.modified
+	tab.readonly = m.readonly
+	tab.viewportTopLine = m.viewportTopLine
+	tab.viewportLeftColumn = m.viewportLeftColumn
+	tab.cursorPos = m.buffer.CursorPos()
+	tab.selecting = m.selecting
+	tab.selectionStart = m.selectionStart
+	tab.selectionEnd = m.selectionEnd
+	tab.searchQuery = m.searchQuery
+	tab.searchMatches = m.searchMatches
+	tab.searchIndex = m.searchIndex
+}
+
+// NextTab switches to the next tab.
+func (m *Model) NextTab() {
+	if m.tabs.Count() <= 1 {
+		return
+	}
+	m.syncToActiveTab()
+	m.tabs.NextTab()
+	m.syncFromActiveTab()
+}
+
+// PrevTab switches to the previous tab.
+func (m *Model) PrevTab() {
+	if m.tabs.Count() <= 1 {
+		return
+	}
+	m.syncToActiveTab()
+	m.tabs.PrevTab()
+	m.syncFromActiveTab()
+}
+
+// SelectTab switches to a specific tab.
+func (m *Model) SelectTab(index int) {
+	if index == m.tabs.ActiveIndex() {
+		return
+	}
+	m.syncToActiveTab()
+	if m.tabs.SelectTab(index) {
+		m.syncFromActiveTab()
+	}
+}
+
+// NewTab creates a new empty tab.
+func (m *Model) NewTab() {
+	m.syncToActiveTab()
+	m.tabs.AddEmptyTab()
+	m.syncFromActiveTab()
+	m.SetStatusMessage("New tab created")
+}
+
+// OpenFileInNewTab opens a file in a new tab.
+func (m *Model) OpenFileInNewTab(filepath, filename, content, encoding, lineEnding string) {
+	m.syncToActiveTab()
+	tab := NewTabFromFile(filepath, filename, content, encoding, lineEnding)
+	m.tabs.AddTab(tab)
+	m.syncFromActiveTab()
+}
+
+// CloseTab closes the current tab.
+// Returns true if the tab was closed, false if it's the last tab.
+func (m *Model) CloseTab() bool {
+	if m.tabs.Count() <= 1 {
+		return false
+	}
+	if m.tabs.CloseActiveTab() {
+		m.syncFromActiveTab()
+		return true
+	}
+	return false
+}
+
+// HasUnsavedTabs returns true if any tab has unsaved changes.
+func (m *Model) HasUnsavedTabs() bool {
+	m.syncToActiveTab()
+	return m.tabs.HasUnsavedChanges()
+}
+
+// GetTabNames returns the filenames of all tabs.
+func (m *Model) GetTabNames() []string {
+	names := make([]string, m.tabs.Count())
+	for i, tab := range m.tabs.Tabs() {
+		names[i] = tab.filename
+		if tab.modified {
+			names[i] += " *"
+		}
+	}
+	return names
+}
+
+// SetShowTabs sets whether to show the tab bar.
+func (m *Model) SetShowTabs(show bool) {
+	m.showTabs = show
+}
+
+// ToggleShowTabs toggles the tab bar visibility.
+func (m *Model) ToggleShowTabs() {
+	m.showTabs = !m.showTabs
 }

@@ -94,6 +94,9 @@ func applyTheme(theme styles.Theme) {
 	syntaxVariableStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffb86c"))
 	syntaxConstantStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#bd93f9"))
 	syntaxBuiltinStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#8be9fd"))
+
+	// Update tab styles
+	styles.UpdateTabStyles(theme)
 }
 
 // Init initializes the model.
@@ -260,8 +263,9 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case "ctrl+alt+n":
+		// New file in current tab (if not modified)
 		if m.modified {
-			m.SetStatusMessage("Save first or force quit with Ctrl+C")
+			m.SetStatusMessage("Save first or use Ctrl+T for new tab")
 			return m, nil
 		}
 		m.buffer = buffer.New()
@@ -269,7 +273,49 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.filename = "[New File]"
 		m.filepath = ""
 		m.modified = false
+		m.syncToActiveTab()
 		m.SetStatusMessage("New file")
+		return m, nil
+
+	case "ctrl+t":
+		// New tab
+		m.NewTab()
+		return m, nil
+
+	case "ctrl+w":
+		// If only one tab or in non-normal mode, close tab triggers search
+		if m.tabs.Count() <= 1 || m.mode != ModeNormal {
+			// Search mode
+			m.mode = ModeSearch
+			m.inputBuffer = m.searchQuery
+			m.inputPrompt = "Search: "
+			return m, nil
+		}
+		// Multiple tabs: close current tab
+		if m.modified {
+			m.SetStatusMessage("Save changes first (Ctrl+S)")
+			return m, nil
+		}
+		m.CloseTab()
+		m.SetStatusMessage(fmt.Sprintf("Tab closed (%d remaining)", m.TabCount()))
+		return m, nil
+
+	case "ctrl+tab", "ctrl+pgdn":
+		// Next tab
+		m.NextTab()
+		return m, nil
+
+	case "ctrl+shift+tab", "ctrl+pgup":
+		// Previous tab
+		m.PrevTab()
+		return m, nil
+
+	case "alt+1", "alt+2", "alt+3", "alt+4", "alt+5", "alt+6", "alt+7", "alt+8", "alt+9":
+		// Switch to tab by number
+		tabNum := int(msg.Runes[0] - '1')
+		if tabNum < m.TabCount() {
+			m.SelectTab(tabNum)
+		}
 		return m, nil
 
 	case "ctrl+s":
@@ -286,12 +332,6 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.mode = ModeGoto
 		m.inputBuffer = ""
 		m.inputPrompt = fmt.Sprintf("Go to line [1-%d]: ", m.buffer.LineCount())
-		return m, nil
-
-	case "ctrl+w":
-		m.mode = ModeSearch
-		m.inputBuffer = m.searchQuery // Pre-fill with last search
-		m.inputPrompt = "Search: "
 		return m, nil
 
 	case "f3":
@@ -1548,6 +1588,12 @@ func (m *Model) View() string {
 
 	var b strings.Builder
 
+	// Tab bar (if multiple tabs)
+	if m.showTabs && m.TabCount() > 1 {
+		b.WriteString(m.renderTabBar())
+		b.WriteString("\n")
+	}
+
 	// Header
 	b.WriteString(m.renderHeader())
 	b.WriteString("\n")
@@ -1596,12 +1642,62 @@ func (m *Model) renderHeader() string {
 	return line
 }
 
+// renderTabBar renders the tab bar showing all open tabs.
+func (m *Model) renderTabBar() string {
+	var b strings.Builder
+
+	activeIdx := m.ActiveTabIndex()
+	tabs := m.tabs.Tabs()
+
+	for i, tab := range tabs {
+		// Tab number (1-based)
+		tabNum := fmt.Sprintf(" %d ", i+1)
+
+		// Filename (truncate if needed)
+		name := tab.filename
+		if len(name) > 15 {
+			name = name[:12] + "..."
+		}
+		if tab.modified {
+			name += "*"
+		}
+		name = " " + name + " "
+
+		// Style based on active/inactive
+		if i == activeIdx {
+			// Active tab: highlighted
+			b.WriteString(styles.TabActiveStyle.Render(tabNum + name))
+		} else {
+			// Inactive tab
+			b.WriteString(styles.TabInactiveStyle.Render(tabNum + name))
+		}
+
+		// Separator
+		if i < len(tabs)-1 {
+			b.WriteString(" ")
+		}
+	}
+
+	// Fill remaining space
+	content := b.String()
+	// Remove ANSI codes for length calculation is complex; just pad to width
+	padding := m.width - len(content)/2 // Rough estimate
+	if padding > 0 {
+		b.WriteString(strings.Repeat(" ", padding))
+	}
+
+	return b.String()
+}
+
 // renderEditor renders the main editor area.
 func (m *Model) renderEditor() string {
 	var b strings.Builder
 
-	// Calculate visible lines (height minus header, status, help)
+	// Calculate visible lines (height minus header, status, help, and optionally tab bar)
 	visibleLines := m.height - 3
+	if m.showTabs && m.TabCount() > 1 {
+		visibleLines-- // Account for tab bar
+	}
 	if visibleLines < 1 {
 		visibleLines = 1
 	}
