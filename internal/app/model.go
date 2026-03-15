@@ -806,8 +806,12 @@ func (m *Model) NextPane() {
 		m.syncFromActiveTab()
 	}
 
+	// Re-apply pane-specific viewport after syncFromActiveTab (which overwrites it)
+	m.viewportTopLine = topLine
+	m.viewportLeftColumn = leftCol
+
 	// Restore cursor position
-	if cursorPos > 0 && cursorPos <= m.buffer.Len() {
+	if cursorPos >= 0 && cursorPos <= m.buffer.Len() {
 		m.buffer.MoveTo(cursorPos)
 	}
 }
@@ -840,8 +844,12 @@ func (m *Model) PrevPane() {
 		m.syncFromActiveTab()
 	}
 
+	// Re-apply pane-specific viewport after syncFromActiveTab (which overwrites it)
+	m.viewportTopLine = topLine
+	m.viewportLeftColumn = leftCol
+
 	// Restore cursor position
-	if cursorPos > 0 && cursorPos <= m.buffer.Len() {
+	if cursorPos >= 0 && cursorPos <= m.buffer.Len() {
 		m.buffer.MoveTo(cursorPos)
 	}
 }
