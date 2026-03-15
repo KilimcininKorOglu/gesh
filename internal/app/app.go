@@ -1987,6 +1987,8 @@ func (m *Model) renderLineWithSearchMatches(line, query string) string {
 }
 
 // wrapLine wraps a line to fit within the given width.
+// wrapLine truncates a line to fit within the given width.
+// TODO: implement proper word-wrap that returns multiple visual lines.
 func wrapLine(line string, width int) string {
 	runes := []rune(line)
 	if len(runes) <= width {
