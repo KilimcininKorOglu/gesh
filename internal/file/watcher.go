@@ -52,9 +52,10 @@ func (fw *FileWatcher) Start() {
 	}
 	fw.running = true
 	fw.updateStats()
+	stopCh := fw.stopCh // capture channel for the goroutine
 	fw.mu.Unlock()
 
-	go fw.watch()
+	go fw.watch(stopCh)
 }
 
 // Stop stops watching the file.
@@ -96,7 +97,9 @@ func (fw *FileWatcher) Check() bool {
 
 	// Check if file has changed
 	if !modTime.Equal(fw.lastModTime) || size != fw.lastSize {
-		// File changed externally
+		// Update stats immediately to prevent duplicate notifications
+		fw.lastModTime = modTime
+		fw.lastSize = size
 		return true
 	}
 
@@ -126,13 +129,14 @@ func (fw *FileWatcher) updateStats() {
 }
 
 // watch is the background goroutine that checks for changes.
-func (fw *FileWatcher) watch() {
+// stopCh is passed as parameter to avoid reading a replaced channel from the struct.
+func (fw *FileWatcher) watch(stopCh <-chan struct{}) {
 	ticker := time.NewTicker(fw.interval)
 	defer ticker.Stop()
 
 	for {
 		select {
-		case <-fw.stopCh:
+		case <-stopCh:
 			return
 		case <-ticker.C:
 			if fw.Check() {
