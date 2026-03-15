@@ -465,7 +465,7 @@ func (m *Model) syncFromActiveTab() {
 	m.updateHighlighter() // Update highlighter for new tab
 
 	// Restore cursor position
-	if tab.cursorPos > 0 && tab.cursorPos <= m.buffer.Len() {
+	if tab.cursorPos >= 0 && tab.cursorPos <= m.buffer.Len() {
 		m.buffer.MoveTo(tab.cursorPos)
 	}
 }
