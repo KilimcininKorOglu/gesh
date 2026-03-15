@@ -152,18 +152,23 @@ func CountLines(filepath string) (int, error) {
 
 	count := 0
 	buf := make([]byte, 32*1024)
-	lineSep := []byte{'\n'}
+	lastByte := byte(0)
+	totalBytes := 0
 
 	for {
 		c, err := f.Read(buf)
 		if err != nil && err != io.EOF {
 			return count, err
 		}
-		
+
+		totalBytes += c
 		for i := 0; i < c; i++ {
-			if buf[i] == lineSep[0] {
+			if buf[i] == '\n' {
 				count++
 			}
+		}
+		if c > 0 {
+			lastByte = buf[c-1]
 		}
 
 		if err == io.EOF {
@@ -171,8 +176,16 @@ func CountLines(filepath string) (int, error) {
 		}
 	}
 
-	// Add 1 if file doesn't end with newline but has content
-	return count + 1, nil
+	if totalBytes == 0 {
+		return 0, nil
+	}
+
+	// Add 1 if file doesn't end with newline (last line has no terminator)
+	if lastByte != '\n' {
+		count++
+	}
+
+	return count, nil
 }
 
 // LoadLines loads specific line range from a file.
