@@ -3,6 +3,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -243,7 +244,9 @@ func (mr *MacroRecorder) SaveMacro(name string) error {
 
 	filePath := getMacrosFilePath()
 	if data, err := os.ReadFile(filePath); err == nil {
-		json.Unmarshal(data, macroFile)
+		if unmarshalErr := json.Unmarshal(data, macroFile); unmarshalErr != nil {
+			return fmt.Errorf("corrupt macros file: %w", unmarshalErr)
+		}
 	}
 
 	// Convert current keys to serialized format
