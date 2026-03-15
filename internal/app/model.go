@@ -563,6 +563,8 @@ func (m *Model) HasUnsavedTabs() bool {
 
 // GetTabNames returns the filenames of all tabs.
 func (m *Model) GetTabNames() []string {
+	// Flush current model state to the active tab so its modified flag is fresh
+	m.syncToActiveTab()
 	names := make([]string, m.tabs.Count())
 	for i, tab := range m.tabs.Tabs() {
 		names[i] = tab.filename
