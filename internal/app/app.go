@@ -1465,6 +1465,7 @@ func (m *Model) replaceAll() {
 		})
 
 		m.setModified()
+		m.syncToActiveTab()
 	}
 }
 
@@ -1552,6 +1553,7 @@ func (m *Model) handleOpenInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.modified = false
 				m.fileChanged = false // Reset external change flag
 				m.UpdateLastSaveTime()
+				m.syncToActiveTab()
 				m.SetStatusMessage("Opened: " + m.filename)
 			}
 		}
