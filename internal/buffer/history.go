@@ -139,8 +139,11 @@ func (h *History) Redo() *EditOperation {
 	op := h.redoStack[len(h.redoStack)-1]
 	h.redoStack = h.redoStack[:len(h.redoStack)-1]
 
-	// Push to undo stack (without merging)
+	// Push to undo stack (without merging), respecting max size
 	h.undoStack = append(h.undoStack, op)
+	if len(h.undoStack) > h.maxSize {
+		h.undoStack = h.undoStack[1:]
+	}
 
 	return &op
 }
