@@ -2662,12 +2662,14 @@ func (m *Model) renderHelpBar() string {
 	switch m.mode {
 	case ModeQuit:
 		content := " [Y] Save & Exit  [N] Discard & Exit  [C] Cancel"
-		return helpStyle.Width(m.width).Render(content)
+		return helpStyle.Width(m.width).Render(content) + "\n" +
+			helpStyle.Width(m.width).Render("")
 
 	case ModeSaveAs, ModeGoto, ModeSearch, ModeReplace, ModeReplaceConfirm, ModeReplaceAll, ModeReplaceAllConfirm, ModeOpen, ModeSaveMacro, ModeLoadMacro:
 		// Show input prompt
 		prompt := " " + m.inputPrompt + m.inputBuffer + "█"
-		return helpStyle.Width(m.width).Render(prompt)
+		return helpStyle.Width(m.width).Render(prompt) + "\n" +
+			helpStyle.Width(m.width).Render("")
 
 	default:
 		// Nano style help - always visible, two lines
