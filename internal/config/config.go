@@ -93,7 +93,25 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	cfg.sanitize()
 	return cfg, nil
+}
+
+// sanitize clamps numeric config values to safe ranges.
+func (cfg *Config) sanitize() {
+	if cfg.Editor.TabSize < 1 {
+		cfg.Editor.TabSize = 4
+	} else if cfg.Editor.TabSize > 16 {
+		cfg.Editor.TabSize = 16
+	}
+	if cfg.Editor.ScrollPadding < 0 {
+		cfg.Editor.ScrollPadding = 0
+	} else if cfg.Editor.ScrollPadding > 50 {
+		cfg.Editor.ScrollPadding = 50
+	}
+	if cfg.Editor.AutoSaveInterval < 0 {
+		cfg.Editor.AutoSaveInterval = 0
+	}
 }
 
 // Save saves configuration to file.
