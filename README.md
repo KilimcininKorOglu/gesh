@@ -20,13 +20,13 @@ Gesh brings that legacy to your modern terminal with **nano-compatible keybindin
 
 ## Why Gesh?
 
-- 🚀 **Fast** — Starts in <50ms, keystroke latency <10ms
-- 🪶 **Lightweight** — Single binary, ~3MB memory usage
-- 🎹 **Nano-compatible** — Same shortcuts you already know
-- 🎨 **Syntax highlighting** — 55+ languages out of the box
-- 📑 **Tabs & splits** — Edit multiple files efficiently
-- 🖱️ **Mouse support** — Click, scroll, drag to select
-- ⚙️ **Configurable** — YAML-based settings, 5 themes
+- **Fast** -- Starts in <50ms, keystroke latency <10ms
+- **Lightweight** -- Single binary, ~3MB memory usage
+- **Nano-compatible** -- Same shortcuts you already know
+- **Syntax highlighting** -- 55+ languages out of the box
+- **Tabs & splits** -- Edit multiple files efficiently
+- **Mouse support** -- Click, scroll, drag to select
+- **Configurable** -- YAML-based settings, 5 themes
 
 ---
 
@@ -49,7 +49,8 @@ go install github.com/KilimcininKorOglu/gesh@latest
 # Or build locally
 git clone https://github.com/KilimcininKorOglu/gesh.git
 cd gesh
-go build -o gesh .
+make build                # Linux/macOS: build for current platform
+.\build.bat build         # Windows: build for current platform
 ```
 
 ### Package Managers
@@ -192,7 +193,7 @@ Gesh uses **nano-compatible** keybindings. If you know nano, you know Gesh.
 | `F4`       | Record macro     |
 | `F5`       | Play macro       |
 
-> 📖 Full reference: [KEYBINDINGS.md](KEYBINDINGS.md)
+> Full reference: [KEYBINDINGS.md](KEYBINDINGS.md)
 
 ---
 
@@ -232,7 +233,7 @@ editor:
 theme: dark
 ```
 
-> ⚙️ Full options: [CONFIG.md](CONFIG.md)
+> Full options: [CONFIG.md](CONFIG.md)
 
 ---
 
@@ -262,18 +263,20 @@ theme: dark
 
 ## Building
 
+All builds and tests go through `make` (Linux/macOS) or `build.bat` (Windows).
+
 ```bash
-# Development build
-go build .
+# Linux/macOS
+make build                # Build for current platform
+make build-all-platforms  # Build for all platforms
+make test                 # Run all tests
+make check                # Run fmt + vet + lint + test
 
-# Run tests
-go test ./...
-
-# Cross-platform builds (Windows)
-.\build.bat all
-
-# Cross-platform builds (Linux/macOS)
-make build-all-platforms
+# Windows
+.\build.bat build         # Build for current platform
+.\build.bat build-all     # Build for all platforms
+.\build.bat test          # Run all tests
+.\build.bat check         # Run fmt + vet + lint + test
 ```
 
 ---
@@ -289,8 +292,8 @@ git clone https://github.com/YOUR_USERNAME/gesh.git
 # Create branch
 git checkout -b feature/amazing-feature
 
-# Make changes, test
-go test ./...
+# Make changes, test, build
+make check
 
 # Commit and push
 git commit -m "feat: add amazing feature"
@@ -315,5 +318,5 @@ Built with these excellent libraries:
 ---
 
 <p align="center">
-  <sub>Made with ♥ for the terminal</sub>
+  <sub>Made for the terminal</sub>
 </p>
