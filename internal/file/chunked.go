@@ -115,13 +115,19 @@ func LoadLargeFile(filepath string, progressFn func(int)) (string, error) {
 
 	for {
 		chunk, err := cr.ReadChunk()
+
+		// Append data before checking EOF — ReadChunk may return
+		// both data and io.EOF on the final read (standard Go idiom).
+		if len(chunk) > 0 {
+			content = append(content, chunk...)
+		}
+
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			return "", err
 		}
-		content = append(content, chunk...)
 
 		// Report progress
 		if progressFn != nil {
