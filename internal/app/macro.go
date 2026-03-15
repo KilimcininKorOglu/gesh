@@ -59,9 +59,9 @@ func (mr *MacroRecorder) ToggleRecording() bool {
 // RecordKey records a key press.
 func (mr *MacroRecorder) RecordKey(key tea.KeyMsg) {
 	if mr.recording && !mr.playing {
-		// Don't record macro control keys
+		// Don't record macro control keys (F4=toggle recording, F5=play)
 		keyStr := key.String()
-		if keyStr == "ctrl+m" || keyStr == "ctrl+shift+m" {
+		if keyStr == "ctrl+m" || keyStr == "ctrl+shift+m" || keyStr == "f4" || keyStr == "f5" {
 			return
 		}
 		mr.keys = append(mr.keys, key)
