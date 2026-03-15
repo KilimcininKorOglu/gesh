@@ -1104,19 +1104,25 @@ func (m *Model) playMacro() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	// Play all keys in sequence
+	// Play all keys in sequence, collecting any commands they produce
 	keysPlayed := 0
+	var cmds []tea.Cmd
 	for {
 		key := m.macro.NextKey()
 		if key == nil {
 			break
 		}
-		// Recursively handle each key (without recording)
-		m.handleKeyMsg(*key)
+		_, cmd := m.handleKeyMsg(*key)
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
 		keysPlayed++
 	}
 
 	m.SetStatusMessage(fmt.Sprintf("Macro played (%d keys)", keysPlayed))
+	if len(cmds) > 0 {
+		return m, tea.Batch(cmds...)
+	}
 	return m, nil
 }
 
