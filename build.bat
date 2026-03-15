@@ -48,6 +48,8 @@ if "%1"=="build-freebsd" goto :build-freebsd
 if "%1"=="build-all" goto :build-all
 if "%1"=="test" goto :test
 if "%1"=="test-unit" goto :test-unit
+if "%1"=="test-pkg" goto :test-pkg
+if "%1"=="test-run" goto :test-run
 if "%1"=="test-integration" goto :test-integration
 if "%1"=="test-cover" goto :test-cover
 if "%1"=="test-bench" goto :test-bench
@@ -264,7 +266,7 @@ goto :eof
 
 :test-unit
 echo %CYAN%Running unit tests...%NC%
-go test -v -short -coverprofile=coverage.out ./...
+go test -v -short -race -coverprofile=coverage.out ./...
 if errorlevel 1 (
     echo %RED%Unit tests failed%NC%
     exit /b 1
@@ -273,9 +275,39 @@ go tool cover -html=coverage.out -o coverage.html
 echo %GREEN%Unit tests passed. Coverage report: coverage.html%NC%
 goto :eof
 
+:test-pkg
+if "%2"=="" (
+    echo %RED%Usage: build.bat test-pkg ./internal/buffer/...%NC%
+    exit /b 1
+)
+echo %CYAN%Running tests for %2...%NC%
+go test -v -race %2
+if errorlevel 1 (
+    echo %RED%Tests failed%NC%
+    exit /b 1
+)
+echo %GREEN%Tests passed%NC%
+goto :eof
+
+:test-run
+if "%2"=="" (
+    echo %RED%Usage: build.bat test-run TestName [./internal/buffer/...]%NC%
+    exit /b 1
+)
+set "TEST_PKG=./..."
+if not "%3"=="" set "TEST_PKG=%3"
+echo %CYAN%Running test %2 in %TEST_PKG%...%NC%
+go test -v -race -run %2 %TEST_PKG%
+if errorlevel 1 (
+    echo %RED%Test failed%NC%
+    exit /b 1
+)
+echo %GREEN%Test passed%NC%
+goto :eof
+
 :test-integration
 echo %CYAN%Running integration tests...%NC%
-go test -v -tags=integration ./...
+go test -v -race -tags=integration ./...
 if errorlevel 1 (
     echo %RED%Integration tests failed%NC%
     exit /b 1
@@ -285,7 +317,7 @@ goto :eof
 
 :test-cover
 echo %CYAN%Running tests with coverage...%NC%
-go test -v -coverprofile=coverage.out -covermode=atomic ./...
+go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 if errorlevel 1 (
     echo %RED%Tests failed%NC%
     exit /b 1
@@ -459,6 +491,8 @@ echo.
 echo %YELLOW%Test targets:%NC%
 echo   test               Run all tests
 echo   test-unit          Run unit tests with coverage
+echo   test-pkg PKG       Run tests for a specific package
+echo   test-run NAME [PKG] Run a specific test by name
 echo   test-integration   Run integration tests
 echo   test-cover         Run tests with coverage report
 echo   test-bench         Run benchmarks

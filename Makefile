@@ -5,7 +5,8 @@
 .PHONY: all build build-linux build-linux-arm64 build-linux-arm \
         build-windows build-windows-arm64 build-darwin build-darwin-arm64 \
         build-freebsd build-all-platforms \
-        test test-unit test-integration test-cover test-bench lint fmt vet clean \
+        test test-unit test-pkg test-run test-integration test-cover test-bench \
+        lint fmt vet check clean \
         run install checksums release version help
 
 # Variables
@@ -118,6 +119,18 @@ test-unit:
 	$(GOTEST) -v -short -race -coverprofile=coverage.out ./...
 	$(GOCMD) tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report: coverage.html"
+
+# Run tests for a specific package: make test-pkg PKG=./internal/buffer/...
+test-pkg:
+	@if [ -z "$(PKG)" ]; then echo "Usage: make test-pkg PKG=./internal/buffer/..."; exit 1; fi
+	@echo "Running tests for $(PKG)..."
+	$(GOTEST) -v -race $(PKG)
+
+# Run a specific test: make test-run TEST=TestName PKG=./internal/buffer/...
+test-run:
+	@if [ -z "$(TEST)" ]; then echo "Usage: make test-run TEST=TestName PKG=./internal/buffer/..."; exit 1; fi
+	@echo "Running test $(TEST)..."
+	$(GOTEST) -v -race -run $(TEST) $(if $(PKG),$(PKG),./...)
 
 test-integration:
 	@echo "Running integration tests..."
@@ -240,6 +253,8 @@ help:
 	@echo "Test targets:"
 	@echo "  test               Run all tests"
 	@echo "  test-unit          Run unit tests with coverage"
+	@echo "  test-pkg           Run tests for a specific package (PKG=./internal/buffer/...)"
+	@echo "  test-run           Run a specific test (TEST=TestName [PKG=./path/...])"
 	@echo "  test-integration   Run integration tests"
 	@echo "  test-cover         Run tests with coverage report"
 	@echo "  test-bench         Run benchmarks"
