@@ -35,9 +35,9 @@ Gesh brings that legacy to your modern terminal with **nano-compatible keybindin
 ### Pre-built Binaries
 
 Download from [Releases](https://github.com/KilimcininKorOglu/gesh/releases) for:
-- Linux (amd64, arm64)
+- Linux (amd64, arm64, arm)
 - macOS (amd64, arm64)
-- Windows (amd64)
+- Windows (amd64, arm64)
 - FreeBSD (amd64)
 
 ### From Source
@@ -273,7 +273,7 @@ go test ./...
 .\build.bat all
 
 # Cross-platform builds (Linux/macOS)
-make all
+make build-all-platforms
 ```
 
 ---
@@ -311,7 +311,6 @@ Built with these excellent libraries:
 
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) — TUI framework
 - [Lipgloss](https://github.com/charmbracelet/lipgloss) — Terminal styling
-- [Cobra](https://github.com/spf13/cobra) — CLI framework
 
 ---
 

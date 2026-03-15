@@ -2635,7 +2635,8 @@ func (m *Model) renderStatusBar() string {
 		padding = 0
 	}
 
-	return statusStyle.Render(leftContent + strings.Repeat(" ", padding) + rightInfo + " ") + "\n"
+	statusContent := leftContent + strings.Repeat(" ", padding) + rightInfo + " "
+	return statusStyle.Width(m.width).Render(statusContent) + "\n"
 }
 
 // renderHelpBar renders the bottom help bar (nano style).
@@ -2643,37 +2644,19 @@ func (m *Model) renderHelpBar() string {
 	switch m.mode {
 	case ModeQuit:
 		content := " [Y] Save & Exit  [N] Discard & Exit  [C] Cancel"
-		padding := m.width - len(content)
-		if padding < 0 {
-			padding = 0
-		}
-		return helpStyle.Render(content + strings.Repeat(" ", padding))
+		return helpStyle.Width(m.width).Render(content)
 
 	case ModeSaveAs, ModeGoto, ModeSearch, ModeReplace, ModeReplaceConfirm, ModeReplaceAll, ModeReplaceAllConfirm, ModeOpen, ModeSaveMacro, ModeLoadMacro:
 		// Show input prompt
 		prompt := " " + m.inputPrompt + m.inputBuffer + "█"
-		padding := m.width - len([]rune(prompt))
-		if padding < 0 {
-			padding = 0
-		}
-		return helpStyle.Render(prompt + strings.Repeat(" ", padding))
+		return helpStyle.Width(m.width).Render(prompt)
 
 	default:
 		// Nano style help - always visible, two lines
-		line1 := "^G Help  ^O WriteOut  ^W Where Is  ^K Cut      ^C Cur Pos  ^X Exit"
-		line2 := "^R Read File  ^\\ Replace  ^U Paste  ^Y Prev Pg  ^V Next Pg  M-U Undo"
+		line1 := "^G Help  ^O Save  ^W Search  ^K Cut  M-6 Copy  ^C Pos  ^X Exit"
+		line2 := "^R Read  ^\\ Replace  ^U Paste  M-U Undo  M-E Redo  ^Y/^V Pg  M-G Goto"
 
-		// Pad lines to width
-		pad1 := m.width - len(line1)
-		pad2 := m.width - len(line2)
-		if pad1 < 0 {
-			pad1 = 0
-		}
-		if pad2 < 0 {
-			pad2 = 0
-		}
-
-		return helpStyle.Render(line1+strings.Repeat(" ", pad1)) + "\n" +
-			helpStyle.Render(line2+strings.Repeat(" ", pad2))
+		return helpStyle.Width(m.width).Render(line1) + "\n" +
+			helpStyle.Width(m.width).Render(line2)
 	}
 }
