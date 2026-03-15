@@ -41,7 +41,7 @@ GOFMT := gofmt
 GOLINT := golangci-lint
 
 # Default target
-all: build
+all: build-all-platforms
 
 # ==================== BUILD TARGETS ====================
 
@@ -236,9 +236,9 @@ help:
 	@echo ""
 	@echo "Usage: make [target]"
 	@echo ""
-	@echo "Build targets (native - auto-detects OS/Arch):"
+	@echo "Build targets:"
 	@echo "  build              Build for current platform"
-	@echo "  build-all-platforms Build for all supported platforms"
+	@echo "  build-all-platforms Build for all supported platforms (default)"
 	@echo ""
 	@echo "Cross-compilation targets:"
 	@echo "  build-linux        Build for Linux (amd64)"
