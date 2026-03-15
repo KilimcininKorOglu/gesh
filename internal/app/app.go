@@ -263,8 +263,9 @@ func (m *Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// Reset mouse scrolling mode on any key press
 	m.mouseScrolling = false
 
-	// Record key for macro (if recording)
-	if m.macro != nil {
+	// Record key for macro only in normal mode to avoid capturing
+	// search terms, filenames, quit confirmations, etc.
+	if m.macro != nil && m.mode == ModeNormal {
 		m.macro.RecordKey(msg)
 	}
 
