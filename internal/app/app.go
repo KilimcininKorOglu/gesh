@@ -1730,16 +1730,24 @@ func (m *Model) copyLine() {
 }
 
 // deleteWordLeft deletes word to the left of cursor.
+// Stops at line boundaries to avoid deleting across lines.
 func (m *Model) deleteWordLeft() {
 	if m.buffer.CursorPos() == 0 {
 		return
 	}
 
 	startPos := m.buffer.CursorPos()
+	lineStart := m.buffer.LineStart(m.buffer.CurrentLine())
 
 	// Move to start of word
 	m.moveWordLeft()
 	endPos := m.buffer.CursorPos()
+
+	// Clamp to line start to avoid deleting across line boundaries
+	if endPos < lineStart {
+		endPos = lineStart
+		m.buffer.MoveTo(endPos)
+	}
 
 	if startPos == endPos {
 		return
@@ -1771,7 +1779,7 @@ func (m *Model) deleteWordRight() {
 	pos := startPos
 	length := m.buffer.Len()
 
-	// Skip current word
+	// Skip current word, stop at newline
 	for pos < length {
 		r := m.buffer.RuneAt(pos)
 		if r == ' ' || r == '\n' || r == '\t' {
@@ -1779,10 +1787,10 @@ func (m *Model) deleteWordRight() {
 		}
 		pos++
 	}
-	// Skip whitespace
+	// Skip whitespace but stop at newline to avoid deleting across lines
 	for pos < length {
 		r := m.buffer.RuneAt(pos)
-		if r != ' ' && r != '\n' && r != '\t' {
+		if r == '\n' || (r != ' ' && r != '\t') {
 			break
 		}
 		pos++
