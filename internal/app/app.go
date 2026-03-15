@@ -1277,23 +1277,32 @@ func (m *Model) handleSearchInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // findMatches finds all occurrences of the search query in the buffer.
+// Positions are stored as rune offsets for compatibility with the gap buffer.
 func (m *Model) findMatches() {
 	m.searchMatches = nil
 	if m.searchQuery == "" {
 		return
 	}
 
-	content := m.buffer.String()
-	query := m.searchQuery
-	pos := 0
+	runes := []rune(m.buffer.String())
+	queryRunes := []rune(m.searchQuery)
+	queryLen := len(queryRunes)
 
-	for {
-		idx := strings.Index(content[pos:], query)
-		if idx == -1 {
-			break
+	if queryLen == 0 || queryLen > len(runes) {
+		return
+	}
+
+	for i := 0; i <= len(runes)-queryLen; i++ {
+		match := true
+		for j := 0; j < queryLen; j++ {
+			if runes[i+j] != queryRunes[j] {
+				match = false
+				break
+			}
 		}
-		m.searchMatches = append(m.searchMatches, pos+idx)
-		pos += idx + 1
+		if match {
+			m.searchMatches = append(m.searchMatches, i)
+		}
 	}
 }
 
