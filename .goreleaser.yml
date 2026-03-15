@@ -1,23 +1,44 @@
+# Gesh (𒄑) - Goreleaser Configuration
+# Triggered by version tags (v*)
+
+project_name: gesh
+
 builds:
-  - id: "hermes"
+  - id: "gesh"
     env:
       - CGO_ENABLED=0
     goos:
       - linux
       - windows
       - darwin
+      - freebsd
     goarch:
       - amd64
       - arm64
-    main: ./cmd/hermes/
-    binary: hermes
+      - arm
+    goarm:
+      - "7"
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: freebsd
+        goarch: arm
+      - goos: freebsd
+        goarch: arm64
+      - goos: darwin
+        goarch: arm
+    main: .
+    binary: gesh
     ldflags:
-      - -s -w -X 'main.version={{.Version}}'
+      - -s -w
+      - -X github.com/KilimcininKorOglu/gesh/pkg/version.Version={{.Version}}
+      - -X github.com/KilimcininKorOglu/gesh/pkg/version.Commit={{.ShortCommit}}
+      - -X github.com/KilimcininKorOglu/gesh/pkg/version.BuildDate={{.Date}}
 
 archives:
-  - id: "hermes"
+  - id: "gesh"
     format: tar.gz
-    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     format_overrides:
       - goos: windows
         format: zip

@@ -21,15 +21,15 @@ set "VERSION_PKG=github.com/KilimcininKorOglu/gesh/pkg/version"
 for /f "tokens=*" %%i in ('git describe --tags --always --dirty 2^>nul') do set "VERSION=%%i"
 if "%VERSION%"=="" set "VERSION=dev"
 
-:: Get build time
-for /f "tokens=*" %%i in ('powershell -command "Get-Date -Format 'yyyy-MM-dd_HH:mm:ss'"') do set "BUILD_TIME=%%i"
+:: Get build date
+for /f "tokens=*" %%i in ('powershell -command "Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ'"') do set "BUILD_DATE=%%i"
 
 :: Get commit hash
 for /f "tokens=*" %%i in ('git rev-parse --short HEAD 2^>nul') do set "COMMIT=%%i"
 if "%COMMIT%"=="" set "COMMIT=unknown"
 
 :: LDFLAGS
-set "LDFLAGS=-ldflags "-s -w -X %VERSION_PKG%.Version=%VERSION% -X %VERSION_PKG%.BuildTime=%BUILD_TIME% -X %VERSION_PKG%.Commit=%COMMIT%""
+set "LDFLAGS=-ldflags "-s -w -X %VERSION_PKG%.Version=%VERSION% -X %VERSION_PKG%.BuildDate=%BUILD_DATE% -X %VERSION_PKG%.Commit=%COMMIT%""
 
 :: Parse command
 if "%1"=="" goto :build
@@ -428,7 +428,7 @@ echo.
 echo %CYAN%%BINARY_NAME% build information:%NC%
 echo   Version:    %VERSION%
 echo   Commit:     %COMMIT%
-echo   Build Time: %BUILD_TIME%
+echo   Build Date: %BUILD_DATE%
 echo.
 goto :eof
 
