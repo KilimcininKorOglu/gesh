@@ -209,6 +209,10 @@ func Exists(path string) bool {
 }
 
 // Filename extracts the filename from a path.
+// Handles both Unix (/) and Windows (\) separators regardless of the current OS.
 func Filename(path string) string {
-	return filepath.Base(path)
+	// filepath.Base only recognizes the current OS separator.
+	// Normalize Windows backslashes so it works on all platforms.
+	normalized := strings.ReplaceAll(path, "\\", "/")
+	return filepath.Base(normalized)
 }
