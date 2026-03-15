@@ -73,7 +73,7 @@ func (gb *GapBuffer) expandGap(minSize int) {
 	copy(newData[newGapEnd:], gb.data[gb.gapEnd:])
 
 	gb.data = newData
-	gb.gapEnd = gb.gapStart + gb.gapSize() + newGapSize
+	gb.gapEnd = newGapEnd
 }
 
 // Version returns the buffer version, incremented on every modification.
@@ -102,7 +102,7 @@ func (gb *GapBuffer) InsertString(s string) {
 	}
 
 	if gb.gapSize() < len(runes) {
-		gb.expandGap(len(runes))
+		gb.expandGap(len(runes) + defaultGapSize)
 	}
 
 	copy(gb.data[gb.gapStart:], runes)
