@@ -2303,10 +2303,10 @@ func (m *Model) renderTabBar() string {
 		}
 	}
 
-	// Fill remaining space
+	// Fill remaining space using lipgloss.Width which strips ANSI codes
 	content := b.String()
-	// Remove ANSI codes for length calculation is complex; just pad to width
-	padding := m.width - len(content)/2 // Rough estimate
+	visibleWidth := lipgloss.Width(content)
+	padding := m.width - visibleWidth
 	if padding > 0 {
 		b.WriteString(strings.Repeat(" ", padding))
 	}
