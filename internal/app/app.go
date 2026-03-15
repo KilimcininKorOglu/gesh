@@ -1094,6 +1094,7 @@ func (m *Model) autoSave() {
 
 	m.modified = false
 	m.UpdateLastSaveTime()
+	m.syncToActiveTab()
 	m.SetStatusMessage("Auto-saved")
 }
 
