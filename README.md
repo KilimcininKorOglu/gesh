@@ -193,7 +193,7 @@ Gesh uses **nano-compatible** keybindings. If you know nano, you know Gesh.
 | `F4`       | Record macro     |
 | `F5`       | Play macro       |
 
-> Full reference: [KEYBINDINGS.md](KEYBINDINGS.md)
+> Full reference: [KEYBINDINGS.md](docs/KEYBINDINGS.md)
 
 ---
 
@@ -233,7 +233,7 @@ editor:
 theme: dark
 ```
 
-> Full options: [CONFIG.md](CONFIG.md)
+> Full options: [CONFIG.md](docs/CONFIG.md)
 
 ---
 
@@ -252,12 +252,12 @@ theme: dark
 
 | Document                           | Description                 |
 |------------------------------------|-----------------------------|
-| [INSTALL.md](INSTALL.md)           | Installation guide          |
-| [KEYBINDINGS.md](KEYBINDINGS.md)   | Complete keyboard reference |
-| [CONFIG.md](CONFIG.md)             | Configuration options       |
-| [THEMES.md](THEMES.md)             | Theme customization         |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute           |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical internals         |
+| [INSTALL.md](docs/INSTALL.md)           | Installation guide          |
+| [KEYBINDINGS.md](docs/KEYBINDINGS.md)   | Complete keyboard reference |
+| [CONFIG.md](docs/CONFIG.md)             | Configuration options       |
+| [THEMES.md](docs/THEMES.md)             | Theme customization         |
+| [CONTRIBUTING.md](CONTRIBUTING.md)       | How to contribute           |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Technical internals         |
 
 ---
 

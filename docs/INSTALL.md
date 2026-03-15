@@ -37,8 +37,9 @@ sudo mv gesh /usr/local/bin/
 
 ### Prerequisites
 
-- Go 1.21 or later
+- Go 1.24 or later
 - Git
+- Make (Linux/macOS) or Windows shell for build.bat
 
 ### Steps
 
@@ -47,26 +48,17 @@ sudo mv gesh /usr/local/bin/
 git clone https://github.com/KilimcininKorOglu/gesh.git
 cd gesh
 
-# Build
-go build -o gesh .
+# Build for current platform (Linux/macOS)
+make build
 
-# Install to PATH (Linux/macOS)
-sudo mv gesh /usr/local/bin/
+# Build for current platform (Windows)
+.\build.bat build
 
-# Or add to your local bin
-mkdir -p ~/bin
-mv gesh ~/bin/
-export PATH="$HOME/bin:$PATH"
+# Install to GOPATH/bin
+make install
 ```
 
-### Build with Version Info
-
-```bash
-VERSION=$(git describe --tags --always)
-BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-go build -ldflags "-X github.com/KilimcininKorOglu/gesh/pkg/version.Version=$VERSION -X github.com/KilimcininKorOglu/gesh/pkg/version.BuildTime=$BUILD_TIME" -o gesh .
-```
+The Makefile and build.bat automatically inject version info (version, commit hash, build date) via ldflags.
 
 ---
 

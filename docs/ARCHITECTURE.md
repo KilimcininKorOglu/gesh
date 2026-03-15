@@ -118,15 +118,20 @@ type Model struct {
 
 Editor operates in different modes:
 
-| Mode          | Purpose            |
-|---------------|--------------------|
-| `ModeNormal`  | Standard editing   |
-| `ModeSearch`  | Find text          |
-| `ModeReplace` | Find & replace     |
-| `ModeGoto`    | Jump to line       |
-| `ModeSaveAs`  | Save with new name |
-| `ModeQuit`    | Quit confirmation  |
-| `ModeOpen`    | Open file          |
+| Mode                    | Purpose                     |
+|-------------------------|-----------------------------|
+| `ModeNormal`            | Standard editing            |
+| `ModeSearch`            | Find text                   |
+| `ModeReplace`           | Find & replace single       |
+| `ModeReplaceConfirm`    | Single replace confirmation |
+| `ModeReplaceAll`        | Replace all                 |
+| `ModeReplaceAllConfirm` | Replace all confirmation    |
+| `ModeGoto`              | Jump to line                |
+| `ModeSaveAs`            | Save with new name          |
+| `ModeQuit`              | Quit confirmation           |
+| `ModeOpen`              | Open file                   |
+| `ModeSaveMacro`         | Save macro to named slot    |
+| `ModeLoadMacro`         | Load macro from named slot  |
 
 ### 5. Syntax Highlighting (`internal/syntax`)
 
@@ -187,23 +192,27 @@ gesh/
 │
 ├── internal/
 │   ├── app/
-│   │   ├── model.go            # Model struct, constructors
-│   │   └── app.go              # Update, View, handlers
+│   │   ├── model.go            # Model struct, constructors (855 LOC)
+│   │   ├── app.go              # Update, View, handlers (~2600 LOC)
+│   │   ├── tabs.go             # Tab management (multi-buffer)
+│   │   ├── split.go            # Split view management
+│   │   └── macro.go            # Macro recording/playback
 │   │
 │   ├── buffer/
-│   │   ├── gap_buffer.go       # Gap buffer implementation
-│   │   ├── history.go          # Undo/redo stack
-│   │   └── gap_buffer_test.go  # Tests (94% coverage)
+│   │   ├── gap.go              # Gap buffer implementation
+│   │   └── history.go          # Undo/redo stack
 │   │
 │   ├── config/
 │   │   └── config.go           # YAML config parsing
 │   │
 │   ├── file/
-│   │   └── file.go             # File I/O operations
+│   │   ├── file.go             # File I/O operations
+│   │   ├── chunked.go          # Large file support (>10MB)
+│   │   └── watcher.go          # External file change detection
 │   │
 │   ├── syntax/
-│   │   ├── highlighter.go      # Tokenization engine
-│   │   └── languages/          # 55+ language definitions
+│   │   ├── highlighter.go      # Tokenization engine with caching
+│   │   └── languages/          # 25+ language definition files
 │   │       ├── go.go
 │   │       ├── python.go
 │   │       ├── javascript.go
@@ -213,9 +222,17 @@ gesh/
 │       └── styles/
 │           └── theme.go        # Theme definitions
 │
-└── pkg/
-    └── version/
-        └── version.go          # Version info
+├── pkg/
+│   └── version/
+│       └── version.go          # Version info (ldflags injection)
+│
+└── docs/                        # Documentation
+    ├── ARCHITECTURE.md
+    ├── CONFIG.md
+    ├── KEYBINDINGS.md
+    ├── THEMES.md
+    ├── INSTALL.md
+    └── PLUGINS.md
 ```
 
 ---
@@ -274,16 +291,17 @@ func (m *Model) getSelectionBounds() (int, int) {
 
 ### Current Optimizations
 
-1. **Gap buffer** - O(1) local edits
-2. **Viewport rendering** - Only render visible lines
-3. **Scroll padding** - Smooth scrolling experience
+1. **Gap buffer** -- O(1) local edits
+2. **Viewport rendering** -- Only render visible lines
+3. **Syntax cache** -- `cachedLines` map avoids re-tokenizing unchanged lines; invalidated per-line via version tracking
+4. **Chunked loading** -- 1MB chunks for files >10MB via `internal/file/chunked.go`
+5. **Smooth scroll** -- Step = diff/3 per 16ms tick (~60fps easing)
+6. **Static linking** -- `CGO_ENABLED=0` for zero-dependency binaries
 
 ### Future Optimizations
 
-1. **Lazy loading** - For large files (>10MB)
-2. **Syntax cache** - Don't re-tokenize unchanged lines
-3. **Incremental render** - Only redraw changed regions
-4. **Rope data structure** - For very large files
+1. **Incremental render** -- Only redraw changed regions
+2. **Rope data structure** -- For very large files
 
 ---
 
@@ -298,6 +316,8 @@ func (m *Model) getSelectionBounds() (int, int) {
 ---
 
 ## Testing Strategy
+
+Run all tests via `make test` (Linux/macOS) or `build.bat test` (Windows).
 
 | Package   | Coverage | Focus                |
 |-----------|----------|----------------------|

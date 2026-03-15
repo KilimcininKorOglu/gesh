@@ -2,11 +2,13 @@
 
 ## Configuration File Location
 
-| Platform | Path                       |
-|----------|----------------------------|
-| Linux    | `~/.config/gesh/gesh.yaml` |
-| macOS    | `~/.config/gesh/gesh.yaml` |
-| Windows  | `%APPDATA%\gesh\gesh.yaml` |
+| Platform | Path                                                                  |
+|----------|-----------------------------------------------------------------------|
+| Linux    | `$XDG_CONFIG_HOME/gesh/gesh.yaml` or `~/.config/gesh/gesh.yaml`      |
+| macOS    | `$XDG_CONFIG_HOME/gesh/gesh.yaml` or `~/.config/gesh/gesh.yaml`      |
+| Windows  | `%APPDATA%\gesh\gesh.yaml` or `%USERPROFILE%\.config\gesh\gesh.yaml` |
+
+Config defaults to `DefaultConfig()` silently if file is missing.
 
 ---
 

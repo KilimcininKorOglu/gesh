@@ -12,8 +12,9 @@ Be respectful and constructive. We're all here to build a great text editor.
 
 ### Prerequisites
 
-- Go 1.21 or later
+- Go 1.24 or later
 - Git
+- Make (Linux/macOS) or Windows shell for build.bat
 - A terminal with UTF-8 support
 
 ### Setup
@@ -29,11 +30,14 @@ git remote add upstream https://github.com/KilimcininKorOglu/gesh.git
 # Install dependencies
 go mod download
 
-# Build
-go build -o gesh .
+# Build (Linux/macOS)
+make build
+
+# Build (Windows)
+.\build.bat build
 
 # Run tests
-go test ./...
+make test
 ```
 
 ---
@@ -56,18 +60,26 @@ git checkout -b fix/bug-description
 
 ### 3. Test
 
+All tests must go through `make` (Linux/macOS) or `build.bat` (Windows).
+
 ```bash
 # Run all tests
-go test ./...
+make test
 
-# Run tests with coverage
-go test -cover ./...
+# Run tests for a specific package
+make test-pkg PKG=./internal/buffer/...
 
-# Run specific package tests
-go test ./internal/buffer/...
+# Run a specific test
+make test-run TEST=TestName PKG=./internal/buffer/...
+
+# Run tests with coverage report
+make test-cover
 
 # Run benchmarks
-go test -bench=. ./internal/buffer/...
+make test-bench
+
+# Run all checks (fmt + vet + lint + test)
+make check
 ```
 
 ### 4. Commit
@@ -96,19 +108,21 @@ Then create a Pull Request on GitHub.
 
 ```
 gesh/
-├── main.go                 # Entry point
+├── main.go                 # Entry point, CLI parsing
+├── Makefile                # Build automation (Linux/macOS)
+├── build.bat               # Build automation (Windows)
 ├── internal/
-│   ├── app/                # Bubble Tea model, update, view
-│   ├── buffer/             # Gap buffer implementation
-│   ├── config/             # Configuration parsing
-│   ├── file/               # File I/O operations
-│   ├── syntax/             # Syntax highlighting
-│   │   └── languages/      # Language definitions
+│   ├── app/                # Bubble Tea model, update, view, tabs, split, macro
+│   ├── buffer/             # Gap buffer implementation, undo/redo
+│   ├── config/             # Configuration parsing (YAML)
+│   ├── file/               # File I/O, chunked loading, file watcher
+│   ├── syntax/             # Syntax highlighting engine
+│   │   └── languages/      # Language definitions (25+ files)
 │   └── ui/
 │       └── styles/         # Theme definitions
 ├── pkg/
-│   └── version/            # Version info
-└── configs/                # Example configs
+│   └── version/            # Version info (ldflags injection)
+└── docs/                   # Documentation
 ```
 
 ---
@@ -290,4 +304,4 @@ By contributing, you agree that your contributions will be licensed under the sa
 
 ---
 
-Thank you for contributing to Gesh! 🎉
+Thank you for contributing to Gesh!
