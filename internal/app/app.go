@@ -2507,11 +2507,12 @@ func (m *Model) renderEditor() string {
 		}
 		if cursorLine >= m.viewportTopLine+visibleLines-scrollPadding {
 			m.viewportTopLine = cursorLine - visibleLines + scrollPadding + 1
-			if m.viewportTopLine > lineCount-visibleLines {
-				m.viewportTopLine = lineCount - visibleLines
+			maxTopLine := lineCount - visibleLines
+			if maxTopLine < 0 {
+				maxTopLine = 0
 			}
-			if m.viewportTopLine < 0 {
-				m.viewportTopLine = 0
+			if m.viewportTopLine > maxTopLine {
+				m.viewportTopLine = maxTopLine
 			}
 		}
 	}
