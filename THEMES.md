@@ -4,13 +4,13 @@
 
 Gesh comes with 5 built-in themes:
 
-| Theme | Description |
-|-------|-------------|
-| `dark` | Default dark theme with blue/pink accents |
-| `light` | Clean light theme for bright environments |
-| `monokai` | Classic Monokai color scheme |
-| `dracula` | Popular purple-tinted Dracula theme |
-| `gruvbox` | Warm, retro Gruvbox colors |
+| Theme     | Description                               |
+|-----------|-------------------------------------------|
+| `dark`    | Default dark theme with blue/pink accents |
+| `light`   | Clean light theme for bright environments |
+| `monokai` | Classic Monokai color scheme              |
+| `dracula` | Popular purple-tinted Dracula theme       |
+| `gruvbox` | Warm, retro Gruvbox colors                |
 
 ---
 
@@ -87,18 +87,18 @@ Types:      #83a598 (blue)
 
 Each theme defines colors for syntax elements:
 
-| Element | Description |
-|---------|-------------|
-| `keyword` | Language keywords (if, for, func, etc.) |
-| `type` | Type names (int, string, etc.) |
-| `string` | String literals |
-| `number` | Numeric literals |
-| `comment` | Comments |
-| `function` | Function names |
-| `variable` | Variables |
-| `constant` | Constants (true, false, nil) |
-| `builtin` | Built-in functions |
-| `operator` | Operators (+, -, =, etc.) |
+| Element    | Description                             |
+|------------|-----------------------------------------|
+| `keyword`  | Language keywords (if, for, func, etc.) |
+| `type`     | Type names (int, string, etc.)          |
+| `string`   | String literals                         |
+| `number`   | Numeric literals                        |
+| `comment`  | Comments                                |
+| `function` | Function names                          |
+| `variable` | Variables                               |
+| `constant` | Constants (true, false, nil)            |
+| `builtin`  | Built-in functions                      |
+| `operator` | Operators (+, -, =, etc.)               |
 
 ---
 

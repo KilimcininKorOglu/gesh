@@ -2,11 +2,11 @@
 
 ## Configuration File Location
 
-| Platform | Path |
-|----------|------|
-| Linux | `~/.config/gesh/gesh.yaml` |
-| macOS | `~/.config/gesh/gesh.yaml` |
-| Windows | `%APPDATA%\gesh\gesh.yaml` |
+| Platform | Path                       |
+|----------|----------------------------|
+| Linux    | `~/.config/gesh/gesh.yaml` |
+| macOS    | `~/.config/gesh/gesh.yaml` |
+| Windows  | `%APPDATA%\gesh\gesh.yaml` |
 
 ---
 

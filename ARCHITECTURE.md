@@ -118,15 +118,15 @@ type Model struct {
 
 Editor operates in different modes:
 
-| Mode | Purpose |
-|------|---------|
-| `ModeNormal` | Standard editing |
-| `ModeSearch` | Find text |
-| `ModeReplace` | Find & replace |
-| `ModeGoto` | Jump to line |
-| `ModeSaveAs` | Save with new name |
-| `ModeQuit` | Quit confirmation |
-| `ModeOpen` | Open file |
+| Mode          | Purpose            |
+|---------------|--------------------|
+| `ModeNormal`  | Standard editing   |
+| `ModeSearch`  | Find text          |
+| `ModeReplace` | Find & replace     |
+| `ModeGoto`    | Jump to line       |
+| `ModeSaveAs`  | Save with new name |
+| `ModeQuit`    | Quit confirmation  |
+| `ModeOpen`    | Open file          |
 
 ### 5. Syntax Highlighting (`internal/syntax`)
 
@@ -289,22 +289,22 @@ func (m *Model) getSelectionBounds() (int, int) {
 
 ## Dependencies
 
-| Dependency | Purpose |
-|------------|---------|
+| Dependency  | Purpose                          |
+|-------------|----------------------------------|
 | `bubbletea` | TUI framework (Elm architecture) |
-| `lipgloss` | Terminal styling |
-| `yaml.v3` | Config file parsing |
+| `lipgloss`  | Terminal styling                 |
+| `yaml.v3`   | Config file parsing              |
 
 ---
 
 ## Testing Strategy
 
-| Package | Coverage | Focus |
-|---------|----------|-------|
-| `buffer` | 94% | Core data structures |
-| `file` | 93% | File I/O |
-| `version` | 100% | Version info |
-| `app` | ~2% | Hard to test TUI |
+| Package   | Coverage | Focus                |
+|-----------|----------|----------------------|
+| `buffer`  | 94%      | Core data structures |
+| `file`    | 93%      | File I/O             |
+| `version` | 100%     | Version info         |
+| `app`     | ~2%      | Hard to test TUI     |
 
 ---
 

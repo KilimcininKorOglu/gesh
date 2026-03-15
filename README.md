@@ -78,47 +78,47 @@ gesh --theme dracula      # With theme
 ## Features
 
 ### Core Editor
-| Feature | Description |
-|---------|-------------|
-| Gap Buffer | O(1) insertions at cursor position |
-| Undo/Redo | Intelligent operation merging |
-| Search & Replace | Incremental search with highlighting |
-| Selection | Keyboard, shift+arrows, or mouse drag |
-| Auto-indent | Preserves indentation on Enter |
+| Feature          | Description                           |
+|------------------|---------------------------------------|
+| Gap Buffer       | O(1) insertions at cursor position    |
+| Undo/Redo        | Intelligent operation merging         |
+| Search & Replace | Incremental search with highlighting  |
+| Selection        | Keyboard, shift+arrows, or mouse drag |
+| Auto-indent      | Preserves indentation on Enter        |
 
 ### Multi-File Editing
-| Feature | Description |
-|---------|-------------|
-| Tabs | `Ctrl+T` new, `Ctrl+Tab` switch |
-| Split View | Horizontal (`Alt+\\`) or vertical (`Alt+-`) |
-| File Watcher | Detects external changes |
+| Feature      | Description                                 |
+|--------------|---------------------------------------------|
+| Tabs         | `Ctrl+T` new, `Ctrl+Tab` switch             |
+| Split View   | Horizontal (`Alt+\\`) or vertical (`Alt+-`) |
+| File Watcher | Detects external changes                    |
 
 ### Interface
-| Feature | Description |
-|---------|-------------|
-| Syntax Highlighting | 55+ languages |
-| Themes | dark, light, monokai, dracula, gruvbox |
-| Line Numbers | With current line marker |
-| Status Bar | Position, encoding, language |
-| Help Bar | Context-sensitive nano-style shortcuts |
+| Feature             | Description                            |
+|---------------------|----------------------------------------|
+| Syntax Highlighting | 55+ languages                          |
+| Themes              | dark, light, monokai, dracula, gruvbox |
+| Line Numbers        | With current line marker               |
+| Status Bar          | Position, encoding, language           |
+| Help Bar            | Context-sensitive nano-style shortcuts |
 
 ### Mouse Support
-| Action | Mouse |
-|--------|-------|
-| Position cursor | Left click |
-| Select text | Left click + drag |
-| Copy selection | Right click |
-| Paste | Right click (no selection) |
-| Scroll | Mouse wheel |
+| Action          | Mouse                      |
+|-----------------|----------------------------|
+| Position cursor | Left click                 |
+| Select text     | Left click + drag          |
+| Copy selection  | Right click                |
+| Paste           | Right click (no selection) |
+| Scroll          | Mouse wheel                |
 
 ### File Handling
-| Feature | Description |
-|---------|-------------|
-| Encodings | UTF-8, UTF-8 BOM, Latin-1 |
+| Feature      | Description                |
+|--------------|----------------------------|
+| Encodings    | UTF-8, UTF-8 BOM, Latin-1  |
 | Line Endings | LF, CRLF, CR (auto-detect) |
-| Auto-save | Configurable interval |
-| Backup Files | Optional .bak creation |
-| Large Files | Chunked loading for >10MB |
+| Auto-save    | Configurable interval      |
+| Backup Files | Optional .bak creation     |
+| Large Files  | Chunked loading for >10MB  |
 
 ---
 
@@ -128,69 +128,69 @@ Gesh uses **nano-compatible** keybindings. If you know nano, you know Gesh.
 
 ### Essential
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+X` | Exit |
+| Shortcut | Action           |
+|----------|------------------|
+| `Ctrl+X` | Exit             |
 | `Ctrl+O` | Save (Write Out) |
 | `Ctrl+R` | Read/Insert file |
-| `Ctrl+G` | Help |
+| `Ctrl+G` | Help             |
 
 ### Editing
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+K` | Cut line/selection |
-| `Ctrl+U` | Paste (Uncut) |
-| `Alt+6` | Copy line/selection |
-| `Alt+U` | Undo |
-| `Alt+E` | Redo |
+| Shortcut | Action              |
+|----------|---------------------|
+| `Ctrl+K` | Cut line/selection  |
+| `Ctrl+U` | Paste (Uncut)       |
+| `Alt+6`  | Copy line/selection |
+| `Alt+U`  | Undo                |
+| `Alt+E`  | Redo                |
 
 ### Navigation
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Y` | Page Up |
-| `Ctrl+V` | Page Down |
-| `Ctrl+A` | Beginning of line |
-| `Ctrl+E` | End of line |
-| `Alt+\` | Beginning of file |
-| `Alt+/` | End of file |
-| `Ctrl+_` / `Alt+G` | Go to line |
+| Shortcut           | Action            |
+|--------------------|-------------------|
+| `Ctrl+Y`           | Page Up           |
+| `Ctrl+V`           | Page Down         |
+| `Ctrl+A`           | Beginning of line |
+| `Ctrl+E`           | End of line       |
+| `Alt+\`            | Beginning of file |
+| `Alt+/`            | End of file       |
+| `Ctrl+_` / `Alt+G` | Go to line        |
 
 ### Search
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+W` | Search (Where Is) |
-| `Alt+W` | Find next |
-| `Ctrl+Q` | Find previous |
-| `Ctrl+\` / `Alt+R` | Replace |
+| Shortcut           | Action            |
+|--------------------|-------------------|
+| `Ctrl+W`           | Search (Where Is) |
+| `Alt+W`            | Find next         |
+| `Ctrl+Q`           | Find previous     |
+| `Ctrl+\` / `Alt+R` | Replace           |
 
 ### Selection
 
-| Shortcut | Action |
-|----------|--------|
-| `Alt+A` | Set mark (start selection) |
-| `Shift+Arrows` | Extend selection |
+| Shortcut       | Action                     |
+|----------------|----------------------------|
+| `Alt+A`        | Set mark (start selection) |
+| `Shift+Arrows` | Extend selection           |
 
 ### Display
 
-| Shortcut | Action |
-|----------|--------|
+| Shortcut | Action               |
+|----------|----------------------|
 | `Ctrl+C` | Show cursor position |
-| `Alt+N` | Toggle line numbers |
-| `Ctrl+L` | Refresh screen |
+| `Alt+N`  | Toggle line numbers  |
+| `Ctrl+L` | Refresh screen       |
 
 ### Extensions (Beyond Nano)
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+T` | New tab |
-| `Ctrl+Tab` | Next tab |
-| `Alt+\\` | Horizontal split |
-| `Alt+-` | Vertical split |
-| `F4` | Record macro |
-| `F5` | Play macro |
+| Shortcut   | Action           |
+|------------|------------------|
+| `Ctrl+T`   | New tab          |
+| `Ctrl+Tab` | Next tab         |
+| `Alt+\\`   | Horizontal split |
+| `Alt+-`    | Vertical split   |
+| `F4`       | Record macro     |
+| `F5`       | Play macro       |
 
 > 📖 Full reference: [KEYBINDINGS.md](KEYBINDINGS.md)
 
@@ -202,13 +202,13 @@ Gesh uses **nano-compatible** keybindings. If you know nano, you know Gesh.
 gesh --theme monokai file.go
 ```
 
-| Theme | Description |
-|-------|-------------|
-| `dark` | Default dark theme |
-| `light` | Light background |
-| `monokai` | Classic Monokai |
-| `dracula` | Dracula colors |
-| `gruvbox` | Gruvbox palette |
+| Theme     | Description        |
+|-----------|--------------------|
+| `dark`    | Default dark theme |
+| `light`   | Light background   |
+| `monokai` | Classic Monokai    |
+| `dracula` | Dracula colors     |
+| `gruvbox` | Gruvbox palette    |
 
 ---
 
@@ -238,25 +238,25 @@ theme: dark
 
 ## Performance
 
-| Metric | Target | Actual |
-|--------|--------|--------|
-| Startup | <50ms | ~30ms |
-| Keystroke latency | <16ms | <10ms |
-| Memory (empty) | <5MB | ~3MB |
-| Memory (1MB file) | <15MB | ~12MB |
+| Metric            | Target | Actual |
+|-------------------|--------|--------|
+| Startup           | <50ms  | ~30ms  |
+| Keystroke latency | <16ms  | <10ms  |
+| Memory (empty)    | <5MB   | ~3MB   |
+| Memory (1MB file) | <15MB  | ~12MB  |
 
 ---
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [INSTALL.md](INSTALL.md) | Installation guide |
-| [KEYBINDINGS.md](KEYBINDINGS.md) | Complete keyboard reference |
-| [CONFIG.md](CONFIG.md) | Configuration options |
-| [THEMES.md](THEMES.md) | Theme customization |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical internals |
+| Document                           | Description                 |
+|------------------------------------|-----------------------------|
+| [INSTALL.md](INSTALL.md)           | Installation guide          |
+| [KEYBINDINGS.md](KEYBINDINGS.md)   | Complete keyboard reference |
+| [CONFIG.md](CONFIG.md)             | Configuration options       |
+| [THEMES.md](THEMES.md)             | Theme customization         |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute           |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical internals         |
 
 ---
 

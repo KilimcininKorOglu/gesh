@@ -1446,19 +1446,19 @@ require (
 
 ## Development Timeline
 
-| Phase | Task | Duration |
-|-------|------|----------|
-| 1 | Plugin API design & types | 1 day |
-| 2 | Hook system implementation | 2 days |
-| 3 | Lua VM integration | 2-3 days |
-| 4 | Core API bindings (buffer, cursor) | 2-3 days |
-| 5 | UI API bindings (message, popup) | 2 days |
-| 6 | External command execution | 1 day |
-| 7 | Plugin loader & manager | 1-2 days |
-| 8 | Built-in plugins | 2 days |
-| 9 | Documentation | 1 day |
-| 10 | Testing & debugging | 2 days |
-| **Total** | | **16-18 days** |
+| Phase     | Task                               | Duration       |
+|-----------|------------------------------------|----------------|
+| 1         | Plugin API design & types          | 1 day          |
+| 2         | Hook system implementation         | 2 days         |
+| 3         | Lua VM integration                 | 2-3 days       |
+| 4         | Core API bindings (buffer, cursor) | 2-3 days       |
+| 5         | UI API bindings (message, popup)   | 2 days         |
+| 6         | External command execution         | 1 day          |
+| 7         | Plugin loader & manager            | 1-2 days       |
+| 8         | Built-in plugins                   | 2 days         |
+| 9         | Documentation                      | 1 day          |
+| 10        | Testing & debugging                | 2 days         |
+| **Total** |                                    | **16-18 days** |
 
 ---
 
