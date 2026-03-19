@@ -250,13 +250,13 @@ theme: dark
 
 ## Documentation
 
-| Document                           | Description                 |
-|------------------------------------|-----------------------------|
+| Document                                | Description                 |
+|-----------------------------------------|-----------------------------|
 | [INSTALL.md](docs/INSTALL.md)           | Installation guide          |
 | [KEYBINDINGS.md](docs/KEYBINDINGS.md)   | Complete keyboard reference |
 | [CONFIG.md](docs/CONFIG.md)             | Configuration options       |
 | [THEMES.md](docs/THEMES.md)             | Theme customization         |
-| [CONTRIBUTING.md](CONTRIBUTING.md)       | How to contribute           |
+| [CONTRIBUTING.md](CONTRIBUTING.md)      | How to contribute           |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Technical internals         |
 
 ---
